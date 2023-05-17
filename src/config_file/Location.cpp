@@ -1,0 +1,99 @@
+#include "../../inc/config_file/Location.hpp"
+
+Location::Location()
+{
+    _locationNumber = "";
+    _locationPath = "";
+    _root = "";
+    _index = "";
+    _autoIndex = "";
+    _uploadPath = "";
+    _redirection = "";
+}
+
+Location::~Location()
+{
+}
+
+/*seters*/
+void Location::set_locationNumber(std::string locationNumber)
+{
+    _locationNumber = locationNumber;
+}
+
+void Location::set_locationPath(std::string locationPath)
+{
+    _locationPath = locationPath;
+}
+
+void Location::set_allowedMethods(std::vector<std::string> allowedMethods)
+{
+    _allowedMethods = allowedMethods;
+}
+
+void Location::set_root(std::string root)
+{
+    _root = root;
+}
+
+void Location::set_index(std::string index)
+{
+    _index = index;
+}
+
+void Location::set_autoIndex(std::string autoIndex)
+{
+    _autoIndex = autoIndex;
+}
+
+void Location::set_uploadPath(std::string uploadPath)
+{
+    _uploadPath = uploadPath;
+}
+
+void Location::set_redirection(std::string redirection)
+{
+    _redirection = redirection;
+}
+
+/*geters*/
+std::string                 Location::get_locationNumber()
+{
+    return _locationNumber;
+}
+
+std::string                 Location::get_locationPath()
+{
+    return _locationPath;
+}
+
+std::vector<std::string>    Location::get_allowedMethods()
+{
+    return _allowedMethods;
+}
+
+std::string                 Location::get_root()
+{
+    return _root;
+}
+
+std::string                 Location::get_index()
+{
+    return _index;
+}
+
+std::string                 Location::get_autoIndex()
+{
+    return _autoIndex;
+}
+
+std::string                 Location::get_uploadPath()
+{
+    return _uploadPath;
+}
+
+std::string                 Location::get_redirection()
+{
+    return _redirection;
+}
+
