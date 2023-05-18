@@ -17,7 +17,7 @@ class Config{
         std::string                 _filePath;
         std::ifstream               _configfile;
         bool                        _serverBlock;                   // true if we are in a server block
-        std::vector<std::string>    _serverkeywords;                // list of keywords for server block
+        std::stack<char>            _curlebracket;                  // to check curlebracket
     
 
     public :

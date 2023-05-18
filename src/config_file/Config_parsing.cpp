@@ -32,26 +32,68 @@ void Config::ParseConfigFile()
 {
     std::string line;
     std::string line_trimmed;
+    // std::string line_trimmed2;
     while (getline(_configfile, line))
     {
+        /*-----------------------Skip spaces and remove comments-----------------------*/
         line_trimmed = trim_line(line);
         if (line_trimmed.empty() || line_trimmed[0] == '#')
             continue;
-        // std::cout << "line :" << line_trimmed << std::endl;
-        if(line_trimmed.find("server") != std::string::npos && !_serverBlock)
+        if (line_trimmed.find('#'))
         {
-            if (line_trimmed.find("{") == std::string::npos)
+            std::string::size_type pos = line_trimmed.find('#');
+            line_trimmed = line_trimmed.substr(0, pos);
+        }
+        // std::cout << "line :" << line_trimmed << std::endl;
+
+        /*-----------------------Found the keyword 'server' and '{'-----------------------*/
+        if(line_trimmed.substr(0, 6) == "server" && !_serverBlock)
+        {
+            if (trim_line(line_trimmed.substr(6)) != "{")
                 print_error_exit("Missing { after server");
             _serverBlock = true;
+            _curlebracket.push('{');
             Server server;
             _servers.push_back(server);
             continue;
         }
+
+        /*-----------------------Found the keyword 'location' and '{'-----------------------*/
+        else if (line_trimmed.substr(0, 8) == "location" && _serverBlock )
+        {
+                std::cout << "hell no" << std::endl;
+            while(std::getline(_configfile, line)){
+                line_trimmed = trim_line(line);
+                if (line_trimmed == "}")
+                    break;
+                continue;
+            }
+            // size_t pos = line_trimmed.find('{');
+            // use substr().
+
+        }
+
+        /*-----------------------We are in a scoop of server-----------------------*/
         else if (_serverBlock)
         {
+            if (line_trimmed == "}")
+            {
+                if (_curlebracket.empty())
+                    print_error_exit("Missing {");
+                char curly = _curlebracket.top();
+                _curlebracket.pop();
+                if (curly != '{')
+                    print_error_exit("Missing {");
+                if (_curlebracket.empty())
+                    _serverBlock = false;
+                continue;
+            }
+
             fill_server_attribute(line_trimmed);
         }
         // std::stringstream ss(line_trimmed);
+        else
+            print_error_exit("Invalid config file");
 
     }
     _configfile.close();
@@ -59,29 +101,37 @@ void Config::ParseConfigFile()
 
 void Config::fill_server_attribute(std::string line_trimmed)
 {
-        std::cout << "line :" << line_trimmed << std::endl;
-    if (line_trimmed.find("}") != std::string::npos ) // bricoulage, hydhaa
-    {
-        return;
-    }
+       
     std::string key;
     std::string value;
-    std::string::size_type pos = line_trimmed.find(" ");
-    if (pos == std::string::npos)
-        print_error_exit("Missing space between key and value");
-    key = line_trimmed.substr(0, pos);
-    value = line_trimmed.substr(pos + 1);
-    if (key == "listen")
+    std::string checker;
+    // std::cout << "line :" << line_trimmed << std::endl;
+    std::stringstream ss(line_trimmed);
+    std::getline(ss, key, ' ');
+    std::getline(ss, value, ';');
+    value = trim_line(value);
+    ss >> checker;
+    // std::cout << "key :[" << key << "]" << std::endl;
+    // std::cout << "value :[" << value << "]" << std::endl;
+    // std::cout << "checker :[" << checker << "]"<< std::endl;
+    // std::string::size_type pos = line_trimmed.find(" ");
+    // if (pos == std::string::npos)
+    //     print_error_exit("Missing space between key and value");
+    // key = line_trimmed.substr(0, pos);
+    // value = line_trimmed.substr(pos + 1);
+    if (value.empty())
+        print_error_exit("Missing value after key");
+    if (key == "listen" && checker.size() == 0)
         _servers.back().set_listen(std::atoi(value.c_str()));
-    else if (key == "host")
+    else if (key == "host" && checker.size() == 0)
         _servers.back().set_host(value);
-    else if (key == "server_name")
+    else if (key == "server_name" && checker.size() == 0)
         _servers.back().set_server_name(value);
-    else if (key == "root")
+    else if (key == "root" && checker.size() == 0)
         _servers.back().set_root(value);
-    else if (key == "index")
+    else if (key == "index" && checker.size() == 0)
         _servers.back().set_index(value);
-    else if (key == "client_max_body_size")
+    else if (key == "client_max_body_size" && checker.size() == 0)
         _servers.back().set_clientMaxBodySize(value);
     else if (key == "error_page")
     {
@@ -93,7 +143,7 @@ void Config::fill_server_attribute(std::string line_trimmed)
         std::string error_page = value.substr(pos + 1);
         _servers.back().set_error_pages(atoi(error_code.c_str()), error_page);
     }
-    else if (key == "upload_path")
+    else if (key == "upload_path" && checker.size() == 0)
         _servers.back().set_uploadPath(value);
     else if (key == "location")
     {
@@ -108,8 +158,9 @@ void Config::fill_server_attribute(std::string line_trimmed)
         // loc.set_root(root);
         // _servers.back().set_locations(loc);
     }
+    
     else
-        // print_error_exit(key);
+        print_error_exit("Invalid value for : " + key);
         return;
 
 }
@@ -166,5 +217,6 @@ void Config::print_vector()
         //     std::cout << "location : " << it->get_location() << std::endl;
         //     std::cout << "root : " << it->get_root() << std::endl;
         // }
+        // std::cout << "here" << std::endl;
     }
 }
