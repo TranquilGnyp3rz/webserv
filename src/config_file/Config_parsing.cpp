@@ -133,18 +133,58 @@ void Config::fill_server_attribute(std::string line_trimmed)
         _servers.back().set_index(value);
     else if (key == "client_max_body_size" && checker.size() == 0)
         _servers.back().set_clientMaxBodySize(value);
-    else if (key == "error_page")
+    else if (key == "error_page" && checker.size() == 0)
     {
-        // handle multiple error pages, need to be implemented, a loop while and stringstream will be good
-        std::string::size_type pos = value.find(" ");
-        if (pos == std::string::npos)
-            print_error_exit("Missing space between key and value");
-        std::string error_code = value.substr(0, pos);
-        std::string error_page = value.substr(pos + 1);
-        _servers.back().set_error_pages(atoi(error_code.c_str()), error_page);
+        std::string error_code;
+        std::string error_page;
+        std::string::size_type posc;
+        std::string::size_type posp;
+        
+        while(value.size() != 0)
+        {
+            std::cout << "value size = " << value.size() << std::endl;
+            posc = value.find(" ");
+            if (posc == std::string::npos)
+                break;
+            error_code = value.substr(0, posc);
+            value = value.substr(posc + 1);
+            value = trim_line(value);
+            posp = value.find(" ");
+            error_page = value.substr(0, posp);
+            _servers.back().set_error_pages(atoi(error_code.c_str()), error_page);
+            value = value.substr(posp + 1);
+            value = trim_line(value);
+
+        }
     }
-    else if (key == "upload_path" && checker.size() == 0)
-        _servers.back().set_uploadPath(value);
+    // else if (key == "upload_path" && checker.size() == 0)
+    //     _servers.back().set_uploadPath(value);
+    else if (key == "cgi_path" && checker.size() == 0)
+    {
+        std::string::size_type pos = value.find(" ");
+        while(pos != std::string::npos)
+        {
+            _servers.back().set_cgipath(value.substr(0, pos));
+            value = value.substr(pos + 1);
+            value = trim_line(value);
+            pos = value.find(" ");
+        }
+        _servers.back().set_cgipath(value.substr(0, pos));
+    }
+
+    else if (key == "cgi_ext" && checker.size() == 0)
+    {
+        std::string::size_type pos = value.find(" ");
+        while(pos != std::string::npos)
+        {
+            _servers.back().set_cgiextension(value.substr(0, pos));
+            value = value.substr(pos + 1);
+            value = trim_line(value);
+            pos = value.find(" ");
+        }
+        _servers.back().set_cgiextension(value.substr(0, pos));
+    }
+               
     else if (key == "location")
     {
         return;
@@ -196,12 +236,12 @@ void Config::print_vector()
     std::cout << "Servers : " << std::endl;
     for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); ++it)
     {
-        std::cout << "listen : " << it->get_listen() << std::endl;
-        std::cout << "host : " << it->get_host() << std::endl;
-        std::cout << "server_name : " << it->get_server_name() << std::endl;
-        std::cout << "root : " << it->get_root() << std::endl;
-        std::cout << "index : " << it->get_index() << std::endl;
-        std::cout << "client_max_body_size : " << it->get_clientMaxBodySize() << std::endl;
+        std::cout << "listen : [" << it->get_listen() << "]" << std::endl;
+        std::cout << "host : [" << it->get_host() << "]" << std::endl;
+        std::cout << "server_name : [" << it->get_server_name() << "]" << std::endl;
+        std::cout << "root : [" << it->get_root() << "]" << std::endl;
+        std::cout << "index : [" << it->get_index() << "]" << std::endl;
+        std::cout << "client_max_body_size : [" << it->get_clientMaxBodySize() << "]" << std::endl;
         // std::cout << "error_page : " << std::endl;
         // std::map<int, std::string> error_pages = it->get_error_pages();
         // for (std::map<int, std::string>::iterator it = error_pages.begin(); it != error_pages.end(); ++it)
@@ -209,8 +249,22 @@ void Config::print_vector()
         //     std::cout << "error_code : " << it->first << std::endl;
         //     std::cout << "error_page : " << it->second << std::endl;
         // }
-        std::cout << "upload_path : " << it->get_uploadPath() << std::endl;
-        std::cout << "locations : " << std::endl;
+        // std::cout << "upload_path : " << it->get_uploadPath() << std::endl;
+        std::cout << "locations : [" << std::endl;
+        for (std::vector<std::string>::iterator itc = it->get_cgipath().begin(); itc != it->get_cgipath().end(); ++itc)
+        {
+            std::cout << "cgi_path : [" << *itc << "]" << std::endl;
+        }
+
+        for (std::vector<std::string>::iterator itcx = it->get_cgiextension().begin(); itcx != it->get_cgiextension().end(); ++itcx)
+        {
+            std::cout << "cgi_ext : [" << *itcx << "]" << std::endl;
+        }
+
+        for (std::vector<std::pair<int, std::string> >::iterator ite = it->get_error_pages().begin(); ite != it->get_error_pages().end(); ++ite)
+        {
+            std::cout << "error_code : [" << ite->first << "] | " << "error_page : [" << ite->second << "]" << std::endl;
+        }
         // std::vector<Location> locations = it->get_locations();
         // for (std::vector<Location>::iterator it = locations.begin(); it != locations.end(); ++it)
         // {

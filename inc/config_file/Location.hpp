@@ -7,8 +7,8 @@
 class Location
 {
     private:
-        std::string                 _locationNumber;
-        std::string                 _locationPath;
+        int                         _locationNumber;
+        // std::string                 _locationPath;
         std::vector<std::string>    _allowedMethods;
         std::string                 _root;
         std::string                 _index;
@@ -20,8 +20,8 @@ class Location
         ~Location();
 
     /*seters*/
-        void set_locationNumber(std::string locationNumber);
-        void set_locationPath(std::string locationPath);
+        void set_locationNumber(int locationNumber);
+        // void set_locationPath(std::string locationPath);
         void set_allowedMethods(std::vector<std::string> allowedMethods);
         void set_root(std::string root);
         void set_index(std::string index);
@@ -30,8 +30,8 @@ class Location
         void set_redirection(std::string redirection);
 
     /*geters*/
-        std::string                 get_locationNumber();
-        std::string                 get_locationPath();
+        int                         get_locationNumber();
+        // std::string                 get_locationPath();
         std::vector<std::string>    get_allowedMethods();
         std::string                 get_root();
         std::string                 get_index();

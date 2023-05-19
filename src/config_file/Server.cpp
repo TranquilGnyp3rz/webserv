@@ -8,7 +8,7 @@ Server::Server()
     _root = "";
     _index = "";
     _clientMaxBodySize = "";
-    _uploadPath = "";
+    // _uploadPath = "";
 }
 
 Server::~Server()
@@ -52,9 +52,19 @@ void Server::set_error_pages(int error_code, std::string error_pages)
 }
 
 
-void Server::set_uploadPath(std::string uploadPath)
+// void Server::set_uploadPath(std::string uploadPath)
+// {
+//     _uploadPath = uploadPath;
+// }
+
+void Server::set_cgipath(std::string cgipath)
 {
-    _uploadPath = uploadPath;
+    _cgipath.push_back(cgipath);
+}
+
+void Server::set_cgiextension(std::string cgiextension)
+{
+    _cgiextension.push_back(cgiextension);
 }
 
 void Server::set_locations(std::vector<Location> locations)
@@ -98,9 +108,19 @@ std::vector<std::pair<int, std::string> > Server::get_error_pages()
     return _error_pages;
 }
 
-std::string Server::get_uploadPath()
+// std::string Server::get_uploadPath()
+// {
+//     return _uploadPath;
+// }
+
+std::vector<std::string> Server::get_cgipath()
 {
-    return _uploadPath;
+    return _cgipath;
+}
+
+std::vector<std::string> Server::get_cgiextension()
+{
+    return _cgiextension;
 }
 
 std::vector<Location> Server::get_locations()

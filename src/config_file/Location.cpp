@@ -2,8 +2,8 @@
 
 Location::Location()
 {
-    _locationNumber = "";
-    _locationPath = "";
+    _locationNumber = 0;
+    // _locationPath = "";
     _root = "";
     _index = "";
     _autoIndex = "";
@@ -16,15 +16,15 @@ Location::~Location()
 }
 
 /*seters*/
-void Location::set_locationNumber(std::string locationNumber)
+void Location::set_locationNumber(int locationNumber)
 {
     _locationNumber = locationNumber;
 }
 
-void Location::set_locationPath(std::string locationPath)
-{
-    _locationPath = locationPath;
-}
+// void Location::set_locationPath(std::string locationPath)
+// {
+//     _locationPath = locationPath;
+// }
 
 void Location::set_allowedMethods(std::vector<std::string> allowedMethods)
 {
@@ -57,15 +57,15 @@ void Location::set_redirection(std::string redirection)
 }
 
 /*geters*/
-std::string                 Location::get_locationNumber()
+int                 Location::get_locationNumber()
 {
     return _locationNumber;
 }
 
-std::string                 Location::get_locationPath()
-{
-    return _locationPath;
-}
+// std::string                 Location::get_locationPath()
+// {
+//     return _locationPath;
+// }
 
 std::vector<std::string>    Location::get_allowedMethods()
 {

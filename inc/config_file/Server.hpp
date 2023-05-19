@@ -17,7 +17,9 @@ private:
 	std::string									_index;
     std::string                                 _clientMaxBodySize;
     std::vector<std::pair<int, std::string> >	_error_pages;
-    std::string									_uploadPath;
+    // std::string									_uploadPath;
+    std::vector<std::string>					_cgipath;
+    std::vector<std::string>					_cgiextension;
     std::vector<Location> 						_locations;
 public:
     Server();
@@ -31,7 +33,9 @@ public:
     void set_index(std::string index);
     void set_clientMaxBodySize(std::string clientMaxBodySize);
     void set_error_pages(int error_code, std::string error_pages);
-    void set_uploadPath(std::string uploadPath);
+    // void set_uploadPath(std::string uploadPath);
+    void set_cgipath(std::string cgipath);
+    void set_cgiextension(std::string cgiextension);
     void set_locations(std::vector<Location> locations);
 
     /*geters*/
@@ -42,7 +46,9 @@ public:
     std::string									get_index();
     std::string									get_clientMaxBodySize();
     std::vector<std::pair<int, std::string> > 	get_error_pages();
-    std::string									get_uploadPath();
+    // std::string									get_uploadPath();
+    std::vector<std::string>					get_cgipath();
+    std::vector<std::string>					get_cgiextension();
     std::vector<Location>						get_locations();
 
 

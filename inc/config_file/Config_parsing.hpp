@@ -31,8 +31,8 @@ class Config{
 
 };
 
-    bool is_empty(std::ifstream &ifile);
-    void print_error_exit(std::string message);
-    std::string trim_line(std::string line);
+    bool is_empty(std::ifstream &ifile);                               // check if the file is empty
+    void print_error_exit(std::string message);                        // print the error message and exit
+    std::string trim_line(std::string line);                        // remove spaces from the begining and the end of the line
 
 #endif
