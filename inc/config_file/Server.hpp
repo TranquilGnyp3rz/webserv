@@ -36,7 +36,7 @@ public:
     // void set_uploadPath(std::string uploadPath);
     void set_cgipath(std::string cgipath);
     void set_cgiextension(std::string cgiextension);
-    void set_locations(std::vector<Location> locations);
+    void set_locations(Location locations);
 
     /*geters*/
     int											get_listen();

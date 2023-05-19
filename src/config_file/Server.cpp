@@ -67,9 +67,9 @@ void Server::set_cgiextension(std::string cgiextension)
     _cgiextension.push_back(cgiextension);
 }
 
-void Server::set_locations(std::vector<Location> locations)
+void Server::set_locations(Location locations)
 {
-    _locations = locations;
+    _locations.push_back(locations);
 }
 
 /*geters*/

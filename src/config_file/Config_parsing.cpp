@@ -44,7 +44,6 @@ void Config::ParseConfigFile()
             std::string::size_type pos = line_trimmed.find('#');
             line_trimmed = line_trimmed.substr(0, pos);
         }
-        // std::cout << "line :" << line_trimmed << std::endl;
 
         /*-----------------------Found the keyword 'server' and '{'-----------------------*/
         if(line_trimmed.substr(0, 6) == "server" && !_serverBlock)
@@ -61,13 +60,33 @@ void Config::ParseConfigFile()
         /*-----------------------Found the keyword 'location' and '{'-----------------------*/
         else if (line_trimmed.substr(0, 8) == "location" && _serverBlock )
         {
-                std::cout << "hell no" << std::endl;
-            while(std::getline(_configfile, line)){
+            // std::cout << "hell no" << std::endl;
+            if (line_trimmed.find('{') == std::string::npos)
+                print_error_exit("Missing { after location");
+            _curlebracket.push('{');
+            Location location;
+            size_t pos = line_trimmed.find('{');
+            std::string locationName = line_trimmed.substr(8, pos - 8);
+            locationName = trim_line(locationName);
+            location.set_locationName(locationName);
+            while(std::getline(_configfile, line))
+            {
                 line_trimmed = trim_line(line);
                 if (line_trimmed == "}")
                     break;
+
+                /*----------------Skip spaces and remove comments in location scoop---------------*/
+                if (line_trimmed.empty() || line_trimmed[0] == '#')
+                    continue;
+                if (line_trimmed.find('#'))
+                {
+                    std::string::size_type pos = line_trimmed.find('#');
+                    line_trimmed = line_trimmed.substr(0, pos);
+                }
                 continue;
             }
+            _servers.back().set_locations(location);
+            // fill all the location and push it to the vector of location after the while loop
             // size_t pos = line_trimmed.find('{');
             // use substr().
 
@@ -142,7 +161,6 @@ void Config::fill_server_attribute(std::string line_trimmed)
         
         while(value.size() != 0)
         {
-            std::cout << "value size = " << value.size() << std::endl;
             posc = value.find(" ");
             if (posc == std::string::npos)
                 break;
@@ -154,7 +172,6 @@ void Config::fill_server_attribute(std::string line_trimmed)
             _servers.back().set_error_pages(atoi(error_code.c_str()), error_page);
             value = value.substr(posp + 1);
             value = trim_line(value);
-
         }
     }
     // else if (key == "upload_path" && checker.size() == 0)
@@ -264,6 +281,11 @@ void Config::print_vector()
         for (std::vector<std::pair<int, std::string> >::iterator ite = it->get_error_pages().begin(); ite != it->get_error_pages().end(); ++ite)
         {
             std::cout << "error_code : [" << ite->first << "] | " << "error_page : [" << ite->second << "]" << std::endl;
+        }
+
+        for (std::vector<Location>::iterator itl = it->get_locations().begin(); itl != it->get_locations().end(); ++itl)
+        {
+            std::cout << "locationName : [" << itl->get_locationName() << "]" << std::endl;
         }
         // std::vector<Location> locations = it->get_locations();
         // for (std::vector<Location>::iterator it = locations.begin(); it != locations.end(); ++it)

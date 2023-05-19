@@ -3,7 +3,7 @@
 Location::Location()
 {
     _locationNumber = 0;
-    // _locationPath = "";
+    _locationName = "";
     _root = "";
     _index = "";
     _autoIndex = "";
@@ -21,10 +21,10 @@ void Location::set_locationNumber(int locationNumber)
     _locationNumber = locationNumber;
 }
 
-// void Location::set_locationPath(std::string locationPath)
-// {
-//     _locationPath = locationPath;
-// }
+void Location::set_locationName(std::string locationName)
+{
+    _locationName = locationName;
+}
 
 void Location::set_allowedMethods(std::vector<std::string> allowedMethods)
 {
@@ -62,10 +62,10 @@ int                 Location::get_locationNumber()
     return _locationNumber;
 }
 
-// std::string                 Location::get_locationPath()
-// {
-//     return _locationPath;
-// }
+std::string                 Location::get_locationName()
+{
+    return _locationName;
+}
 
 std::vector<std::string>    Location::get_allowedMethods()
 {
