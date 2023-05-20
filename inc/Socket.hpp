@@ -6,7 +6,7 @@
 /*   By: heloufra <heloufra@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 20:48:24 by heloufra          #+#    #+#             */
-/*   Updated: 2023/05/19 23:15:05 by heloufra         ###   ########.fr       */
+/*   Updated: 2023/05/20 14:38:25 by heloufra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@ class Socket
         int _protocol;
         int _fd;
         int _port;
+        struct sockaddr_in _address;
     public:
         Socket();
         Socket(Socket const & cpy);
@@ -38,6 +39,7 @@ class Socket
         void setFd(int fd);
         int getPort() const;
         void setPort(int port);
+        struct sockaddr_in getAddress() const;
         void listenSocket(int backlog);
 };
 #endif

@@ -6,7 +6,7 @@
 /*   By: heloufra <heloufra@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/18 20:41:10 by heloufra          #+#    #+#             */
-/*   Updated: 2023/05/19 23:12:38 by heloufra         ###   ########.fr       */
+/*   Updated: 2023/05/20 14:40:38 by heloufra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,13 +49,11 @@ Socket::Socket(int domain, int type, int protocol, int port)
     if (_fd == -1)
         throw std::runtime_error("socket error");
 
-    struct sockaddr_in addr;
-
-    addr.sin_family = _domain;
-    addr.sin_port = htons(port);
-    addr.sin_addr.s_addr = INADDR_ANY;
+    _address.sin_family = _domain;
+    _address.sin_port = htons(port);
+    _address.sin_addr.s_addr = INADDR_ANY;
     
-    if (bind(_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0)
+    if (bind(_fd, (struct sockaddr *)& _address, sizeof( _address)) < 0)
         throw std::runtime_error("bind error");
 }
 
@@ -78,6 +76,11 @@ void Socket::setFd(int fd)
 int Socket::getPort() const
 {
     return (_port);
+}
+
+struct sockaddr_in Socket::getAddress() const
+{
+    return (_address);
 }
 
 void Socket::setPort(int port)
