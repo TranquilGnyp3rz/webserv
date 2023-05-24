@@ -15,6 +15,8 @@ void Config::HandleConfigFile(std::string filepath)
     this->_configfile.open(_filePath.c_str());
     CheckConfigFile();
     ParseConfigFile();
+    if(_curlebracket.size() != 0)
+        print_error_exit("Missing }");
     print_vector();
 }
 void Config::CheckConfigFile()
@@ -69,6 +71,8 @@ void Config::ParseConfigFile()
             std::string locationName = line_trimmed.substr(8, pos - 8);
             locationName = trim_line(locationName);
             location.set_locationName(locationName);
+
+            /*-----------------------We are in a scoop of location-----------------------*/
             while(std::getline(_configfile, line))
             {
                 line_trimmed = trim_line(line);
@@ -130,6 +134,8 @@ void Config::fill_location_attribute(std::string line_trimmed, Location& locatio
     std::string value;
     std::string checker;
     // std::cout << "line :" << line_trimmed << std::endl;
+    if (line_trimmed.find(';') == std::string::npos)
+        print_error_exit("Missing ';' in location scoop");
     std::stringstream ss(line_trimmed);
     std::getline(ss, key, ' ');
     std::getline(ss, value, ';');
@@ -147,17 +153,25 @@ void Config::fill_location_attribute(std::string line_trimmed, Location& locatio
     else if (key == "return" && checker.size() == 0)
         location.set_redirection(value);
     else if (key == "allow_methods" && checker.size() == 0){
-        // location.set_allow_methods(value);
-        return;
+        std::string::size_type pos = value.find(" ");
+        while(pos != std::string::npos)
+        {
+            location.set_allowedMethods(value.substr(0, pos));
+            value = value.substr(pos + 1);
+            value = trim_line(value);
+            pos = value.find(" ");
+        }
+        location.set_allowedMethods(value.substr(0, pos));
+
     }
     else
     {
-        std::cout << "key : [" << key << "]" << std::endl;
-        std::cout << "value : [" << value << "]" << std::endl;
-        std::cout << "checker : [" << checker.empty() << "]" << std::endl;
+        // std::cout << "key : [" << key << "]" << std::endl;
+        // std::cout << "value : [" << value << "]" << std::endl;
+        // std::cout << "checker : [" << checker.empty() << "]" << std::endl;
         print_error_exit("Invalid value for : [" + key + "]");
     }
-    return;
+    // return;
 }
 
 void Config::fill_server_attribute(std::string line_trimmed)
@@ -167,6 +181,8 @@ void Config::fill_server_attribute(std::string line_trimmed)
     std::string value;
     std::string checker;
     // std::cout << "line :" << line_trimmed << std::endl;
+    if (line_trimmed.find(';') == std::string::npos)
+        print_error_exit("Missing ';' in server scoop");
     std::stringstream ss(line_trimmed);
     std::getline(ss, key, ' ');
     std::getline(ss, value, ';');
@@ -194,6 +210,8 @@ void Config::fill_server_attribute(std::string line_trimmed)
         _servers.back().set_index(value);
     else if (key == "client_max_body_size" && checker.size() == 0)
         _servers.back().set_clientMaxBodySize(value);
+    else if (key == "upload_path" && checker.size() == 0)
+        _servers.back().set_uploadPath(value);
     else if (key == "error_page" && checker.size() == 0)
     {
         std::string error_code;
@@ -216,8 +234,6 @@ void Config::fill_server_attribute(std::string line_trimmed)
             value = trim_line(value);
         }
     }
-    // else if (key == "upload_path" && checker.size() == 0)
-    //     _servers.back().set_uploadPath(value);
     else if (key == "cgi_path" && checker.size() == 0)
     {
         std::string::size_type pos = value.find(" ");
@@ -244,19 +260,19 @@ void Config::fill_server_attribute(std::string line_trimmed)
         _servers.back().set_cgiextension(value.substr(0, pos));
     }
                
-    else if (key == "location")
-    {
-        return;
-        // std::string::size_type pos = value.find(" ");
-        // if (pos == std::string::npos)
-        //     print_error_exit("Missing space between key and value");
-        // std::string location = value.substr(0, pos);
-        // std::string root = value.substr(pos + 1);
-        // Location loc;
-        // loc.set_location(location);
-        // loc.set_root(root);
-        // _servers.back().set_locations(loc);
-    }
+    // else if (key == "location")
+    // {
+    //     return;
+    //     // std::string::size_type pos = value.find(" ");
+    //     // if (pos == std::string::npos)
+    //     //     print_error_exit("Missing space between key and value");
+    //     // std::string location = value.substr(0, pos);
+    //     // std::string root = value.substr(pos + 1);
+    //     // Location loc;
+    //     // loc.set_location(location);
+    //     // loc.set_root(root);
+    //     // _servers.back().set_locations(loc);
+    // }
     
     else
         print_error_exit("Invalid value for : " + key);
@@ -292,9 +308,10 @@ std::string trim_line(std::string line)
 
 void Config::print_vector()
 {
-    std::cout << "Servers : " << std::endl;
     for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); ++it)
-    {
+    {   std::cout << "----------------------------------------" << std::endl;
+        std::cout << "Servers : " << std::endl;
+        
         std::cout << "listen : [" << it->get_listen() << "]" << std::endl;
         std::cout << "host : [" << it->get_host() << "]" << std::endl;
         std::cout << "server_name : [" << it->get_server_name() << "]" << std::endl;
@@ -308,8 +325,8 @@ void Config::print_vector()
         //     std::cout << "error_code : " << it->first << std::endl;
         //     std::cout << "error_page : " << it->second << std::endl;
         // }
-        // std::cout << "upload_path : " << it->get_uploadPath() << std::endl;
-        std::cout << "locations : [" << std::endl;
+        std::cout << "upload_path : [" << it->get_uploadPath() << "]" << std::endl;
+        // std::cout << "locations : [" << std::endl;
         for (std::vector<std::string>::iterator itc = it->get_cgipath().begin(); itc != it->get_cgipath().end(); ++itc)
         {
             std::cout << "cgi_path : [" << *itc << "]" << std::endl;
@@ -327,13 +344,19 @@ void Config::print_vector()
 
         for (std::vector<Location>::iterator itl = it->get_locations().begin(); itl != it->get_locations().end(); ++itl)
         {
+            std::cout << "----------------------------------------" << std::endl;
             std::cout << "locationNumber : [" << itl->get_locationNumber() << "]" << std::endl;
             std::cout << "locationName : [" << itl->get_locationName() << "]" << std::endl;
             std::cout << "autoindex : [" << itl->get_autoIndex() << "]" << std::endl;
             std::cout << "index : [" << itl->get_index() << "]" << std::endl;
             std::cout << "root : [" << itl->get_root() << "]" << std::endl;
             std::cout << "return : [" << itl->get_redirection() << "]" << std::endl;
-            // std::cout << "methods : [" << std::endl;
+            std::cout << "allowed_methods : [";
+            for(std::vector<std::string>::iterator itm = itl->get_allowedMethods().begin(); itm != itl->get_allowedMethods().end(); ++itm)
+            {
+                std::cout << *itm << " ";
+            }
+            std::cout << "]" << std::endl;
 
         }
         // std::vector<Location> locations = it->get_locations();

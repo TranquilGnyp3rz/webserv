@@ -26,9 +26,9 @@ void Location::set_locationName(std::string locationName)
     _locationName = locationName;
 }
 
-void Location::set_allowedMethods(std::vector<std::string> allowedMethods)
+void Location::set_allowedMethods(std::string allowedMethods)
 {
-    _allowedMethods = allowedMethods;
+    _allowedMethods.push_back(allowedMethods);
 }
 
 void Location::set_root(std::string root)
@@ -67,7 +67,7 @@ std::string                 Location::get_locationName()
     return _locationName;
 }
 
-std::vector<std::string>    Location::get_allowedMethods()
+std::vector<std::string>    &Location::get_allowedMethods()
 {
     return _allowedMethods;
 }

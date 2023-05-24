@@ -22,7 +22,7 @@ class Location
     /*seters*/
         void set_locationNumber(int locationNumber);
         void set_locationName(std::string locationName);
-        void set_allowedMethods(std::vector<std::string> allowedMethods);
+        void set_allowedMethods(std::string allowedMethods);
         void set_root(std::string root);
         void set_index(std::string index);
         void set_autoIndex(std::string autoIndex);
@@ -32,7 +32,7 @@ class Location
     /*geters*/
         int                         get_locationNumber();
         std::string                 get_locationName();
-        std::vector<std::string>    get_allowedMethods();
+        std::vector<std::string>    &get_allowedMethods();
         std::string                 get_root();
         std::string                 get_index();
         std::string                 get_autoIndex();
