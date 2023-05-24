@@ -5,7 +5,7 @@ Server::Server()
     _listen = 0;
     _host = "";
     _server_name = "";
-    _root = "";
+    // _root = "";
     _index = "";
     _clientMaxBodySize = "";
     _uploadPath = "";
@@ -31,10 +31,10 @@ void Server::set_server_name(std::string server_name)
     _server_name = server_name;
 }
 
-void Server::set_root(std::string root)
-{
-    _root = root;
-}
+// void Server::set_root(std::string root)
+// {
+//     _root = root;
+// }
 
 void Server::set_index(std::string index)
 {
@@ -88,10 +88,10 @@ std::string Server::get_server_name()
     return _server_name;
 }
 
-std::string Server::get_root()
-{
-    return _root;
-}
+// std::string Server::get_root()
+// {
+//     return _root;
+// }
 
 std::string Server::get_index()
 {

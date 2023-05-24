@@ -45,6 +45,7 @@ void Config::ParseConfigFile()
         {
             std::string::size_type pos = line_trimmed.find('#');
             line_trimmed = line_trimmed.substr(0, pos);
+            line_trimmed = trim_line(line_trimmed);
         }
 
         /*-----------------------Found the keyword 'server' and '{'-----------------------*/
@@ -135,24 +136,38 @@ void Config::fill_location_attribute(std::string line_trimmed, Location& locatio
     std::string checker;
     // std::cout << "line :" << line_trimmed << std::endl;
     if (line_trimmed.find(';') == std::string::npos)
-        print_error_exit("Missing ';' in location scoop");
+        print_error_exit("Missing ';' in location scoop : [ " + line_trimmed + " ]");
     std::stringstream ss(line_trimmed);
     std::getline(ss, key, ' ');
     std::getline(ss, value, ';');
     value = trim_line(value);
     ss >> checker;
     
-    if (value.empty())
-        print_error_exit("Missing value after key");
-    else if (key == "autoindex" && checker.size() == 0)
+    // if (value.empty())
+    //     print_error_exit("Missing value after key");
+    if (key == "autoindex" && checker.size() == 0){
+        if (value.empty())
+            print_error_exit("Missing value after key");
         location.set_autoIndex(value);
-    else if (key == "index" && checker.size() == 0)
+    }
+    else if (key == "index" && checker.size() == 0){
+        if (value.empty())
+            print_error_exit("Missing value after key");
         location.set_index(value);
-    else if (key == "root" && checker.size() == 0)
+    }
+    else if (key == "root" && checker.size() == 0){
+        if (value.empty())
+            print_error_exit("Missing value after key");
         location.set_root(value);
-    else if (key == "return" && checker.size() == 0)
+    }
+    else if (key == "return" && checker.size() == 0){
+        if (value.empty())
+            print_error_exit("Missing value after key");
         location.set_redirection(value);
+    }
     else if (key == "allow_methods" && checker.size() == 0){
+        if (value.empty())
+            print_error_exit("Missing value after key");
         std::string::size_type pos = value.find(" ");
         while(pos != std::string::npos)
         {
@@ -169,7 +184,7 @@ void Config::fill_location_attribute(std::string line_trimmed, Location& locatio
         // std::cout << "key : [" << key << "]" << std::endl;
         // std::cout << "value : [" << value << "]" << std::endl;
         // std::cout << "checker : [" << checker.empty() << "]" << std::endl;
-        print_error_exit("Invalid value for : [" + key + "]");
+        print_error_exit("Unknown key : [ " + key + " ]");
     }
     // return;
 }
@@ -196,24 +211,44 @@ void Config::fill_server_attribute(std::string line_trimmed)
     //     print_error_exit("Missing space between key and value");
     // key = line_trimmed.substr(0, pos);
     // value = line_trimmed.substr(pos + 1);
-    if (value.empty())
-        print_error_exit("Missing value after key");
-    if (key == "listen" && checker.size() == 0)
+    // if (value.empty())
+    //     print_error_exit("Missing value after key");
+    if (key == "listen" && checker.size() == 0){
+        if (value.empty())
+            print_error_exit("Missing value after key");
         _servers.back().set_listen(std::atoi(value.c_str()));
-    else if (key == "host" && checker.size() == 0)
+    }
+    else if (key == "host" && checker.size() == 0){
+        if (value.empty())
+            print_error_exit("Missing value after key");
         _servers.back().set_host(value);
-    else if (key == "server_name" && checker.size() == 0)
+    }
+    else if (key == "server_name" && checker.size() == 0){
+        if (value.empty())
+        print_error_exit("Missing value after key");
         _servers.back().set_server_name(value);
-    else if (key == "root" && checker.size() == 0)
-        _servers.back().set_root(value);
-    else if (key == "index" && checker.size() == 0)
+    }
+    // else if (key == "root" && checker.size() == 0)
+    //     _servers.back().set_root(value);
+    else if (key == "index" && checker.size() == 0){
+        if (value.empty())
+            print_error_exit("Missing value after key");
         _servers.back().set_index(value);
-    else if (key == "client_max_body_size" && checker.size() == 0)
+    }
+    else if (key == "client_max_body_size" && checker.size() == 0){
+        if (value.empty())
+            print_error_exit("Missing value after key");
         _servers.back().set_clientMaxBodySize(value);
-    else if (key == "upload_path" && checker.size() == 0)
+    }
+    else if (key == "upload_path" && checker.size() == 0){
+        if (value.empty())
+            print_error_exit("Missing value after key");
         _servers.back().set_uploadPath(value);
+    }
     else if (key == "error_page" && checker.size() == 0)
     {
+        if (value.empty())
+            print_error_exit("Missing value after key");
         std::string error_code;
         std::string error_page;
         std::string::size_type posc;
@@ -222,8 +257,11 @@ void Config::fill_server_attribute(std::string line_trimmed)
         while(value.size() != 0)
         {
             posc = value.find(" ");
-            if (posc == std::string::npos)
+            if (posc == std::string::npos){
+                if(!value.empty())
+                    print_error_exit("Missing error_page_path after error code : " + value);
                 break;
+            }
             error_code = value.substr(0, posc);
             value = value.substr(posc + 1);
             value = trim_line(value);
@@ -232,10 +270,16 @@ void Config::fill_server_attribute(std::string line_trimmed)
             _servers.back().set_error_pages(atoi(error_code.c_str()), error_page);
             value = value.substr(posp + 1);
             value = trim_line(value);
+            if (posp == std::string::npos){
+                // print_error_exit("Missing error_page path after error code : " + error_code);
+                break;
+            }
         }
     }
     else if (key == "cgi_path" && checker.size() == 0)
     {
+        if (value.empty())
+            print_error_exit("Missing value after key");
         std::string::size_type pos = value.find(" ");
         while(pos != std::string::npos)
         {
@@ -249,6 +293,8 @@ void Config::fill_server_attribute(std::string line_trimmed)
 
     else if (key == "cgi_ext" && checker.size() == 0)
     {
+        if (value.empty())
+            print_error_exit("Missing value after key");
         std::string::size_type pos = value.find(" ");
         while(pos != std::string::npos)
         {
@@ -259,24 +305,10 @@ void Config::fill_server_attribute(std::string line_trimmed)
         }
         _servers.back().set_cgiextension(value.substr(0, pos));
     }
-               
-    // else if (key == "location")
-    // {
-    //     return;
-    //     // std::string::size_type pos = value.find(" ");
-    //     // if (pos == std::string::npos)
-    //     //     print_error_exit("Missing space between key and value");
-    //     // std::string location = value.substr(0, pos);
-    //     // std::string root = value.substr(pos + 1);
-    //     // Location loc;
-    //     // loc.set_location(location);
-    //     // loc.set_root(root);
-    //     // _servers.back().set_locations(loc);
-    // }
     
     else
-        print_error_exit("Invalid value for : " + key);
-        return;
+        print_error_exit("Unknown key : [ " + key + " ]");
+    // return;
 
 }
 
@@ -315,18 +347,10 @@ void Config::print_vector()
         std::cout << "listen : [" << it->get_listen() << "]" << std::endl;
         std::cout << "host : [" << it->get_host() << "]" << std::endl;
         std::cout << "server_name : [" << it->get_server_name() << "]" << std::endl;
-        std::cout << "root : [" << it->get_root() << "]" << std::endl;
+        // std::cout << "root : [" << it->get_root() << "]" << std::endl;
         std::cout << "index : [" << it->get_index() << "]" << std::endl;
         std::cout << "client_max_body_size : [" << it->get_clientMaxBodySize() << "]" << std::endl;
-        // std::cout << "error_page : " << std::endl;
-        // std::map<int, std::string> error_pages = it->get_error_pages();
-        // for (std::map<int, std::string>::iterator it = error_pages.begin(); it != error_pages.end(); ++it)
-        // {
-        //     std::cout << "error_code : " << it->first << std::endl;
-        //     std::cout << "error_page : " << it->second << std::endl;
-        // }
         std::cout << "upload_path : [" << it->get_uploadPath() << "]" << std::endl;
-        // std::cout << "locations : [" << std::endl;
         for (std::vector<std::string>::iterator itc = it->get_cgipath().begin(); itc != it->get_cgipath().end(); ++itc)
         {
             std::cout << "cgi_path : [" << *itc << "]" << std::endl;
@@ -359,12 +383,5 @@ void Config::print_vector()
             std::cout << "]" << std::endl;
 
         }
-        // std::vector<Location> locations = it->get_locations();
-        // for (std::vector<Location>::iterator it = locations.begin(); it != locations.end(); ++it)
-        // {
-        //     std::cout << "location : " << it->get_location() << std::endl;
-        //     std::cout << "root : " << it->get_root() << std::endl;
-        // }
-        // std::cout << "here" << std::endl;
     }
 }

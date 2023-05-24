@@ -1,5 +1,6 @@
-1- remove root from server and do it  mandatory in location.
+1- remove root from server and do it  mandatory in location. (done)
 2- add uploadPath to server. (done)
-3- check all the attributes, and the mandatory ones
+3- check all the attributes, and the mandatory ones.
 4- complete and fill the non mandatory attributes.
-5- handling the error msg for "};" or }}
+5- handle the error msg for "};" or }}.
+6- handle error_page. (done)
