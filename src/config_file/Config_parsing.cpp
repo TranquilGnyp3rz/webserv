@@ -9,17 +9,61 @@ Config::~Config()
 {
 
 }
-void Config::HandleConfigFile(std::string filepath)
+void Config::Handle_configFile(std::string filepath)
 {
     this->_filePath = filepath;
     this->_configfile.open(_filePath.c_str());
-    CheckConfigFile();
-    ParseConfigFile();
+    Check_configFile();
+    Parse_ConfigFile();
     if(_curlebracket.size() != 0)
-        print_error_exit("Missing }");
-    print_vector();
+        print_error_exit("Curlebracket '}' is missing");
+    Print_vector();
+    Check_complete_config_object();
+    Print_vector();
 }
-void Config::CheckConfigFile()
+
+void Config::Check_complete_config_object()
+{
+    if (_servers.size() == 0)
+        print_error_exit("Missing server block");
+    for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); it++)
+    {
+        if (it->get_listen() == 0)
+            print_error_exit("Missing listen");
+        if (it->get_host() == "")
+            print_error_exit("Missing host");
+        // if (it->get_server_name() == "")
+        //     print_error_exit("Missing server_name");
+        if (it->get_index() == "")
+            print_error_exit("Missing index");
+        // if (it->get_clientMaxBodySize() == "")
+        //     print_error_exit("Missing client_max_body_size");
+        if (it->get_uploadPath() == "")
+            print_error_exit("Missing upload_path");
+        // if (it->get_error_pages().size() == 0)
+        //     print_error_exit("Missing error_page");
+        if (it->get_locations().size() == 0)
+            print_error_exit("Missing location");
+        for (std::vector<Location>::iterator it2 = it->get_locations().begin(); it2 != it->get_locations().end(); it2++)
+        {
+            if (it2->get_locationName() == "")
+                print_error_exit("Missing location_name");
+            if (it2->get_root() == "")
+                print_error_exit("Missing root");
+            if (it2->get_index() == "")
+                it2->set_index(it->get_index());
+            if (it2->get_autoIndex() == "")
+                it2->set_autoIndex("off");
+            if (it2->get_allowedMethods().size() == 0)
+                print_error_exit("Missing allowed_methods");
+            // if (it2->get_redirection() == "")
+            //     print_error_exit("Missing redirection");
+        }
+    }
+
+}
+
+void Config::Check_configFile()
 {
     if (_configfile.is_open())
     {
@@ -30,7 +74,7 @@ void Config::CheckConfigFile()
         print_error_exit("Unable to open " + this->_filePath);
 }
 
-void Config::ParseConfigFile()
+void Config::Parse_ConfigFile()
 {
     std::string line;
     std::string line_trimmed;
@@ -93,7 +137,7 @@ void Config::ParseConfigFile()
                     std::string::size_type pos = line_trimmed.find('#');
                     line_trimmed = line_trimmed.substr(0, pos);
                 }
-                fill_location_attribute(line_trimmed, location);
+                Fill_location_attribute(line_trimmed, location);
                 // continue;
             }
             _servers.back().set_locations(location);
@@ -119,7 +163,7 @@ void Config::ParseConfigFile()
                 continue;
             }
 
-            fill_server_attribute(line_trimmed);
+            Fill_server_attribute(line_trimmed);
         }
         // std::stringstream ss(line_trimmed);
         else
@@ -129,7 +173,7 @@ void Config::ParseConfigFile()
     _configfile.close();
 }
 
-void Config::fill_location_attribute(std::string line_trimmed, Location& location){
+void Config::Fill_location_attribute(std::string line_trimmed, Location& location){
     location.set_locationNumber(_servers.back().get_locations().size() + 1);
     std::string key;
     std::string value;
@@ -189,7 +233,7 @@ void Config::fill_location_attribute(std::string line_trimmed, Location& locatio
     // return;
 }
 
-void Config::fill_server_attribute(std::string line_trimmed)
+void Config::Fill_server_attribute(std::string line_trimmed)
 {
        
     std::string key;
@@ -312,6 +356,8 @@ void Config::fill_server_attribute(std::string line_trimmed)
 
 }
 
+
+
 bool is_empty(std::ifstream &ifile)
 {
     return ifile.peek() == std::ifstream::traits_type::eof();
@@ -338,7 +384,7 @@ std::string trim_line(std::string line)
     return line;
 }
 
-void Config::print_vector()
+void Config::Print_vector()
 {
     for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); ++it)
     {   std::cout << "----------------------------------------" << std::endl;

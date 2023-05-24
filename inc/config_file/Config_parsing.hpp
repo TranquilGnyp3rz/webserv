@@ -23,12 +23,13 @@ class Config{
     public :
         Config();
         ~Config();
-        void HandleConfigFile(std::string filepath);
-        void CheckConfigFile();                                     // check if the config file is valid
-        void ParseConfigFile();                                     // parse the config file
-        void fill_server_attribute(std::string line_trimmed);      // fill the server attribute
-        void fill_location_attribute(std::string line_trimmed, Location& location);    // fill the location attribute
-        void print_vector();
+        void Handle_configFile(std::string filepath);
+        void Check_configFile();                                     // check if the config file is valid
+        void Parse_ConfigFile();                                     // parse the config file
+        void Fill_server_attribute(std::string line_trimmed);      // fill the server attribute
+        void Fill_location_attribute(std::string line_trimmed, Location& location);    // fill the location attribute
+        void Print_vector();
+        void Check_complete_config_object();                                 // check if the config object is valid
 
 };
 
