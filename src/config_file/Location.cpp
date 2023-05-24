@@ -7,7 +7,7 @@ Location::Location()
     _root = "";
     _index = "";
     _autoIndex = "";
-    _uploadPath = "";
+    // _uploadPath = "";
     _redirection = "";
 }
 
@@ -46,10 +46,10 @@ void Location::set_autoIndex(std::string autoIndex)
     _autoIndex = autoIndex;
 }
 
-void Location::set_uploadPath(std::string uploadPath)
-{
-    _uploadPath = uploadPath;
-}
+// void Location::set_uploadPath(std::string uploadPath)
+// {
+//     _uploadPath = uploadPath;
+// }
 
 void Location::set_redirection(std::string redirection)
 {
@@ -87,10 +87,10 @@ std::string                 Location::get_autoIndex()
     return _autoIndex;
 }
 
-std::string                 Location::get_uploadPath()
-{
-    return _uploadPath;
-}
+// std::string                 Location::get_uploadPath()
+// {
+//     return _uploadPath;
+// }
 
 std::string                 Location::get_redirection()
 {

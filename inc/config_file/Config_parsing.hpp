@@ -27,6 +27,7 @@ class Config{
         void CheckConfigFile();                                     // check if the config file is valid
         void ParseConfigFile();                                     // parse the config file
         void fill_server_attribute(std::string line_trimmed);      // fill the server attribute
+        void fill_location_attribute(std::string line_trimmed, Location& location);    // fill the location attribute
         void print_vector();
 
 };

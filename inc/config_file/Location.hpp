@@ -9,12 +9,12 @@ class Location
     private:
         int                         _locationNumber;
         std::string                 _locationName;
-        std::vector<std::string>    _allowedMethods;
-        std::string                 _root;
-        std::string                 _index;
         std::string                 _autoIndex;
-        std::string                 _uploadPath;
+        std::string                 _index;
+        std::string                 _root;
+        // std::string                 _uploadPath;
         std::string                 _redirection;
+        std::vector<std::string>    _allowedMethods;
     public:
         Location();
         ~Location();
@@ -26,7 +26,7 @@ class Location
         void set_root(std::string root);
         void set_index(std::string index);
         void set_autoIndex(std::string autoIndex);
-        void set_uploadPath(std::string uploadPath);
+        // void set_uploadPath(std::string uploadPath);
         void set_redirection(std::string redirection);
 
     /*geters*/
@@ -36,7 +36,7 @@ class Location
         std::string                 get_root();
         std::string                 get_index();
         std::string                 get_autoIndex();
-        std::string                 get_uploadPath();
+        // std::string                 get_uploadPath();
         std::string                 get_redirection();
 
 };

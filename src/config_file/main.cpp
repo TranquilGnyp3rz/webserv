@@ -9,4 +9,5 @@ int main(int ac, char **av, char **env)
         cf.HandleConfigFile(av[1]);
     }
     std::cout << "done" << std::endl;
+    return 0;
 }

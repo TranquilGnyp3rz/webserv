@@ -103,7 +103,7 @@ std::string Server::get_clientMaxBodySize()
     return _clientMaxBodySize;
 }
 
-std::vector<std::pair<int, std::string> > Server::get_error_pages()
+std::vector<std::pair<int, std::string> >& Server::get_error_pages()
 {
     return _error_pages;
 }
@@ -113,17 +113,17 @@ std::vector<std::pair<int, std::string> > Server::get_error_pages()
 //     return _uploadPath;
 // }
 
-std::vector<std::string> Server::get_cgipath()
+std::vector<std::string>& Server::get_cgipath()
 {
     return _cgipath;
 }
 
-std::vector<std::string> Server::get_cgiextension()
+std::vector<std::string>& Server::get_cgiextension()
 {
     return _cgiextension;
 }
 
-std::vector<Location> Server::get_locations()
+std::vector<Location>& Server::get_locations()
 {
     return _locations;
 }

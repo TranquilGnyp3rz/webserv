@@ -45,11 +45,11 @@ public:
     std::string									get_root();
     std::string									get_index();
     std::string									get_clientMaxBodySize();
-    std::vector<std::pair<int, std::string> > 	get_error_pages();
+    std::vector<std::pair<int, std::string> >& 	get_error_pages();
     // std::string									get_uploadPath();
-    std::vector<std::string>					get_cgipath();
-    std::vector<std::string>					get_cgiextension();
-    std::vector<Location>						get_locations();
+    std::vector<std::string>&					get_cgipath();
+    std::vector<std::string>&					get_cgiextension();
+    std::vector<Location>&					get_locations();
 
 
 };

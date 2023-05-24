@@ -73,7 +73,12 @@ void Config::ParseConfigFile()
             {
                 line_trimmed = trim_line(line);
                 if (line_trimmed == "}")
+                {
+                    if (_curlebracket.empty() || _curlebracket.top() != '{')
+                        print_error_exit("Missing {");
+                    _curlebracket.pop();
                     break;
+                }
 
                 /*----------------Skip spaces and remove comments in location scoop---------------*/
                 if (line_trimmed.empty() || line_trimmed[0] == '#')
@@ -83,7 +88,8 @@ void Config::ParseConfigFile()
                     std::string::size_type pos = line_trimmed.find('#');
                     line_trimmed = line_trimmed.substr(0, pos);
                 }
-                continue;
+                fill_location_attribute(line_trimmed, location);
+                // continue;
             }
             _servers.back().set_locations(location);
             // fill all the location and push it to the vector of location after the while loop
@@ -116,6 +122,42 @@ void Config::ParseConfigFile()
 
     }
     _configfile.close();
+}
+
+void Config::fill_location_attribute(std::string line_trimmed, Location& location){
+    location.set_locationNumber(_servers.back().get_locations().size() + 1);
+    std::string key;
+    std::string value;
+    std::string checker;
+    // std::cout << "line :" << line_trimmed << std::endl;
+    std::stringstream ss(line_trimmed);
+    std::getline(ss, key, ' ');
+    std::getline(ss, value, ';');
+    value = trim_line(value);
+    ss >> checker;
+    
+    if (value.empty())
+        print_error_exit("Missing value after key");
+    else if (key == "autoindex" && checker.size() == 0)
+        location.set_autoIndex(value);
+    else if (key == "index" && checker.size() == 0)
+        location.set_index(value);
+    else if (key == "root" && checker.size() == 0)
+        location.set_root(value);
+    else if (key == "return" && checker.size() == 0)
+        location.set_redirection(value);
+    else if (key == "allow_methods" && checker.size() == 0){
+        // location.set_allow_methods(value);
+        return;
+    }
+    else
+    {
+        std::cout << "key : [" << key << "]" << std::endl;
+        std::cout << "value : [" << value << "]" << std::endl;
+        std::cout << "checker : [" << checker.empty() << "]" << std::endl;
+        print_error_exit("Invalid value for : [" + key + "]");
+    }
+    return;
 }
 
 void Config::fill_server_attribute(std::string line_trimmed)
@@ -285,7 +327,14 @@ void Config::print_vector()
 
         for (std::vector<Location>::iterator itl = it->get_locations().begin(); itl != it->get_locations().end(); ++itl)
         {
+            std::cout << "locationNumber : [" << itl->get_locationNumber() << "]" << std::endl;
             std::cout << "locationName : [" << itl->get_locationName() << "]" << std::endl;
+            std::cout << "autoindex : [" << itl->get_autoIndex() << "]" << std::endl;
+            std::cout << "index : [" << itl->get_index() << "]" << std::endl;
+            std::cout << "root : [" << itl->get_root() << "]" << std::endl;
+            std::cout << "return : [" << itl->get_redirection() << "]" << std::endl;
+            // std::cout << "methods : [" << std::endl;
+
         }
         // std::vector<Location> locations = it->get_locations();
         // for (std::vector<Location>::iterator it = locations.begin(); it != locations.end(); ++it)
