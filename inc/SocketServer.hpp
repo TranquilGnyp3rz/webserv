@@ -25,16 +25,16 @@
 namespace WBS {
     class SocketServer {
         private:
-            struct sockaddr_in _address;
+            sockaddr_in6 _address;
             int _sock;
             int _connection;
             int _port;
             int _domain;
         public:
             SocketServer(int domain, int service, int protocol, int port, u_long interface);
-            int connect_to_network(int sock, struct sockaddr_in addr);
+            void connect_to_network(int sock);
             void test_connection(int);
-            struct sockaddr_in get_addr();
+            struct sockaddr_in6 get_addr();
             int get_sock();
             int get_connection();
             int set_non_blocking(int sock);
