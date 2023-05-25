@@ -26,6 +26,8 @@ void Config::Check_complete_config_object()
 {
     if (_servers.size() == 0)
         print_error_exit("Missing server block");
+        
+    //-------------------------Server---------------------------------
     for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); it++)
     {
         if (it->get_listen() == "") 
@@ -36,16 +38,21 @@ void Config::Check_complete_config_object()
             it->set_host("127.0.0.1");
         if (!is_valid_ip(it->get_host()))
             print_error_exit("Unvalid value for host");
-        // if (it->get_server_name() == "")
-        //     print_error_exit("Missing server_name");
-        if (it->get_index() == "")
-            print_error_exit("Missing index");
-        // if (it->get_clientMaxBodySize() == "")
-        //     print_error_exit("Missing client_max_body_size");
+        if (it->get_server_name().find(" ") != std::string::npos)
+            print_error_exit("Unvalid value for server_name (don't use space)");
+        if (!is_valid_index(it->get_index()))
+            print_error_exit("Unvalid value for index");
+        if (it->get_error_pages().size() == 0)
+            print_error_exit("Error_page is missing");
+        if (it->get_clientMaxBodySize() != "")
+            if (!is_number(it->get_clientMaxBodySize()) || atoi(it->get_clientMaxBodySize().c_str()) == 0)
+                print_error_exit("Unvalid value for client_max_body_size");
         if (it->get_uploadPath() == "")
-            print_error_exit("Missing upload_path");
-        // if (it->get_error_pages().size() == 0)
-        //     print_error_exit("Missing error_page");
+            print_error_exit("Upload_path is missing");
+        if(it->get_uploadPath().find(" ") != std::string::npos)
+            print_error_exit("Unvalid value for upload_path (don't use space)");
+
+        //-------------------------location---------------------------------
         if (it->get_locations().size() == 0)
             print_error_exit("Missing location");
         for (std::vector<Location>::iterator it2 = it->get_locations().begin(); it2 != it->get_locations().end(); it2++)
@@ -273,7 +280,7 @@ void Config::Fill_server_attribute(std::string line_trimmed)
     }
     else if (key == "server_name" && checker.size() == 0){
         if (value.empty())
-        print_error_exit("Missing value after key : "+ key);
+            print_error_exit("Missing value after key : "+ key);
         _servers.back().set_server_name(value);
     }
     // else if (key == "root" && checker.size() == 0)
@@ -315,6 +322,8 @@ void Config::Fill_server_attribute(std::string line_trimmed)
             value = trim_line(value);
             posp = value.find(" ");
             error_page = value.substr(0, posp);
+            if (!is_number(error_code) || error_code.size() != 3)
+                print_error_exit("Error code must be a number of 3 digits : " + error_code);
             _servers.back().set_error_pages(atoi(error_code.c_str()), error_page);
             value = value.substr(posp + 1);
             value = trim_line(value);
@@ -408,6 +417,20 @@ bool is_valid_ip(std::string ip)
     if (std::atoi(first.c_str()) > 255 || std::atoi(second.c_str()) > 255 || std::atoi(third.c_str()) > 255 || std::atoi(fourth.c_str()) > 255)
         return false;
     if (check_zero_ip(first) || check_zero_ip(second) || check_zero_ip(third) || check_zero_ip(fourth))
+        return false;
+    return true;
+}
+
+bool is_valid_index(std::string index)
+{
+    std::size_t pos;
+    while((pos = index.find('.')) != std::string::npos)
+    {
+        if (index.substr(0, pos) == "")
+            return false;
+        index = index.substr(pos + 1);
+    }
+    if (index != "html")
         return false;
     return true;
 }
