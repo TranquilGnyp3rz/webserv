@@ -2,7 +2,7 @@
 
 Server::Server()
 {
-    _listen = 0;
+    _listen = "";
     _host = "";
     _server_name = "";
     // _root = "";
@@ -16,7 +16,7 @@ Server::~Server()
 }
 
 /*seters*/
-void Server::set_listen(int listen)
+void Server::set_listen(std::string listen)
 {
     _listen = listen;
 }
@@ -73,7 +73,7 @@ void Server::set_locations(Location locations)
 }
 
 /*geters*/
-int Server::get_listen()
+std::string Server::get_listen()
 {
     return _listen;
 }

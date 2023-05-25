@@ -17,7 +17,7 @@ void Config::Handle_configFile(std::string filepath)
     Parse_ConfigFile();
     if(_curlebracket.size() != 0)
         print_error_exit("Curlebracket '}' is missing");
-    Print_vector();
+    // Print_vector();
     Check_complete_config_object();
     Print_vector();
 }
@@ -28,10 +28,14 @@ void Config::Check_complete_config_object()
         print_error_exit("Missing server block");
     for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); it++)
     {
-        if (it->get_listen() == 0)
-            print_error_exit("Missing listen");
+        if (it->get_listen() == "") 
+            print_error_exit("Need to specify a port (listen)");
+        if (!is_valid_port(it->get_listen()))
+            print_error_exit("Unvalid value for port (listen)");
         if (it->get_host() == "")
-            print_error_exit("Missing host");
+            it->set_host("127.0.0.1");
+        if (!is_valid_ip(it->get_host()))
+            print_error_exit("Unvalid value for host");
         // if (it->get_server_name() == "")
         //     print_error_exit("Missing server_name");
         if (it->get_index() == "")
@@ -259,40 +263,40 @@ void Config::Fill_server_attribute(std::string line_trimmed)
     //     print_error_exit("Missing value after key");
     if (key == "listen" && checker.size() == 0){
         if (value.empty())
-            print_error_exit("Missing value after key");
-        _servers.back().set_listen(std::atoi(value.c_str()));
+            print_error_exit("Missing value after key : "+ key);
+        _servers.back().set_listen(value.c_str());
     }
     else if (key == "host" && checker.size() == 0){
         if (value.empty())
-            print_error_exit("Missing value after key");
+            print_error_exit("Missing value after key : "+ key);
         _servers.back().set_host(value);
     }
     else if (key == "server_name" && checker.size() == 0){
         if (value.empty())
-        print_error_exit("Missing value after key");
+        print_error_exit("Missing value after key : "+ key);
         _servers.back().set_server_name(value);
     }
     // else if (key == "root" && checker.size() == 0)
     //     _servers.back().set_root(value);
     else if (key == "index" && checker.size() == 0){
         if (value.empty())
-            print_error_exit("Missing value after key");
+            print_error_exit("Missing value after key : "+ key);
         _servers.back().set_index(value);
     }
     else if (key == "client_max_body_size" && checker.size() == 0){
         if (value.empty())
-            print_error_exit("Missing value after key");
+            print_error_exit("Missing value after key : "+ key);
         _servers.back().set_clientMaxBodySize(value);
     }
     else if (key == "upload_path" && checker.size() == 0){
         if (value.empty())
-            print_error_exit("Missing value after key");
+            print_error_exit("Missing value after key : "+ key);
         _servers.back().set_uploadPath(value);
     }
     else if (key == "error_page" && checker.size() == 0)
     {
         if (value.empty())
-            print_error_exit("Missing value after key");
+            print_error_exit("Missing value after key : "+ key);
         std::string error_code;
         std::string error_page;
         std::string::size_type posc;
@@ -323,7 +327,7 @@ void Config::Fill_server_attribute(std::string line_trimmed)
     else if (key == "cgi_path" && checker.size() == 0)
     {
         if (value.empty())
-            print_error_exit("Missing value after key");
+            print_error_exit("Missing value after key : "+ key);
         std::string::size_type pos = value.find(" ");
         while(pos != std::string::npos)
         {
@@ -338,7 +342,7 @@ void Config::Fill_server_attribute(std::string line_trimmed)
     else if (key == "cgi_ext" && checker.size() == 0)
     {
         if (value.empty())
-            print_error_exit("Missing value after key");
+            print_error_exit("Missing value after key : "+ key);
         std::string::size_type pos = value.find(" ");
         while(pos != std::string::npos)
         {
@@ -356,7 +360,57 @@ void Config::Fill_server_attribute(std::string line_trimmed)
 
 }
 
+bool is_number(const std::string str) {
+    return str.find_first_not_of("0123456789") == std::string::npos;
+}
 
+bool is_valid_port(std::string port)
+{
+    if (!is_number(port))
+        return false;
+    int port_int = std::atoi(port.c_str());
+    if (port_int < 0 || port_int > 65535)
+        return false;
+    return true;
+}
+
+bool check_zero_ip(std::string ip)
+{
+    if (ip[0] == '0' && ip.size() != 1)
+        return true;
+    return false;
+}
+
+bool is_valid_ip(std::string ip)
+{
+    std::string::size_type pos = ip.find(".");
+    if (pos == std::string::npos)
+        return false;
+    std::string first = ip.substr(0, pos);
+    ip = ip.substr(pos + 1);
+    pos = ip.find(".");
+    if (pos == std::string::npos)
+        return false;
+    std::string second = ip.substr(0, pos);
+    ip = ip.substr(pos + 1);
+    pos = ip.find(".");
+    if (pos == std::string::npos)
+        return false;
+    std::string third = ip.substr(0, pos);
+    ip = ip.substr(pos + 1);
+    if (ip.empty())
+        return false;
+    std::string fourth = ip;
+    if (first.size() > 3 || second.size() > 3 || third.size() > 3 || fourth.size() > 3)
+        return false;
+    if (!is_number(first) || !is_number(second) || !is_number(third) || !is_number(fourth))
+        return false;
+    if (std::atoi(first.c_str()) > 255 || std::atoi(second.c_str()) > 255 || std::atoi(third.c_str()) > 255 || std::atoi(fourth.c_str()) > 255)
+        return false;
+    if (check_zero_ip(first) || check_zero_ip(second) || check_zero_ip(third) || check_zero_ip(fourth))
+        return false;
+    return true;
+}
 
 bool is_empty(std::ifstream &ifile)
 {
@@ -383,6 +437,7 @@ std::string trim_line(std::string line)
         line.erase(line.begin(), line.end());
     return line;
 }
+
 
 void Config::Print_vector()
 {

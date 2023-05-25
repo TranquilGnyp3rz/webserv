@@ -10,7 +10,7 @@ class Location;
 class Server
 {
 private:
-    int                                     	_listen;
+    std::string                                 _listen;
 	std::string									_host;
     std::string                                 _server_name;
 	// std::string									_root;
@@ -26,7 +26,7 @@ public:
     ~Server();
 
     /*seters*/
-    void set_listen(int listen);
+    void set_listen(std::string listen);
     void set_host(std::string host);
     void set_server_name(std::string server_name);
     // void set_root(std::string root);
@@ -39,7 +39,7 @@ public:
     void set_locations(Location locations);
 
     /*geters*/
-    int											get_listen();
+    std::string									get_listen();
     std::string                                 get_host();
     std::string									get_server_name();
     // std::string									get_root();

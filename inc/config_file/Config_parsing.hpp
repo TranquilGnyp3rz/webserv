@@ -32,9 +32,12 @@ class Config{
         void Check_complete_config_object();                                 // check if the config object is valid
 
 };
-
+    //                      outil
     bool is_empty(std::ifstream &ifile);                               // check if the file is empty
     void print_error_exit(std::string message);                        // print the error message and exit
-    std::string trim_line(std::string line);                        // remove spaces from the begining and the end of the line
+    std::string trim_line(std::string line);                       // remove spaces from the begining and the end of the line
+    bool is_number(std::string str);                               // check if the string is a number
+    bool is_valid_port(std::string port);                          // check if the port is valid
+    bool is_valid_ip(std::string ip);                              // check if the ip is valid
 
 #endif
