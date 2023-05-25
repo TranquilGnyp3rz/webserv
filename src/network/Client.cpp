@@ -6,66 +6,53 @@
 /*   By: akhouya <akhouya@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/24 17:44:51 by akhouya           #+#    #+#             */
-/*   Updated: 2023/05/24 18:05:10 by akhouya          ###   ########.fr       */
+/*   Updated: 2023/05/25 16:05:40 by akhouya          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../inc/Client.hpp"
 #include <vector>
 #include <sstream>
-std::vector<std::string>    split_words(const std::string &str) {
+
+static std::vector<std::string>    split_words(const std::string &str, char c) {
     std::vector<std::string> words;
 
-    if (str.at(str.length() - 1) != '\r')
-        exit(0);
     std::istringstream iss(str);
     while (iss)
     {
         std::string word;
-        iss >> word;
-        // std::cout << word << std::endl;
+        std::getline(iss, word, c);
         words.push_back(word);
     }
     return words;
 }
-request_t split_lines(const std::string &str) {
+
+static request_t split_lines(const std::string &str) {
     std::vector<std::vector<std::string> >  vectors;
     std::istringstream iss(str);
     std::string line;
     request_t request;
+    bool firstline = false;
     while (std::getline(iss, line, '\n'))
     {
-        vectors.push_back(split_words(line));
+        if (firstline == false) {
+            firstline = true;
+            vectors.push_back(split_words(line, ' '));
+            request.method = vectors.at(0).at(0);
+            request.path = vectors.at(0).at(1);
+            request.http_version = vectors.at(0).at(2);
+            continue;
+        }
+            vectors.push_back(split_words(line, ':'));
+            
+            request.headers.insert(std::pair<std::string, std::string>(vectors.at(vectors.size() - 1).at(0), vectors.at(vectors.size() - 1).at(1)));
+               
     }
-    for (int i = 0; i < vectors.size(); i++)
-    {
-        for(int j = 0; j < vectors.at(i).size(); j++) {
-            switch (i) {
-                case 0: {
-                    switch (j) {
-                    case 0:
-                        request.method = vectors.at(i).at(j);
-                    case 1:
-                        request.path = vectors.at(i).at(j);
-                    case 2:
-                        request.http_version = vectors.at(i).at(j);
-                    }
-                case 1:
-                    request.host =  vectors.at(i).at(1);
-                }
-            }
-                
-        }
-        }
-
     return request;
 }
 
 WBS::Client::Client(int sock) {
     _sock = sock;
-    // _buffer = "";
-    // _request = {};
-    // _request.method = "";
 }
 
 request_t WBS::Client::get_request() {

@@ -6,7 +6,7 @@
 /*   By: akhouya <akhouya@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/21 12:59:59 by akhouya           #+#    #+#             */
-/*   Updated: 2023/05/24 18:12:05 by akhouya          ###   ########.fr       */
+/*   Updated: 2023/05/25 16:04:40 by akhouya          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@
 #include <stdlib.h>
 
 void print_fd_set(fd_set* set) {
-    int max_fd = FD_SETSIZE; // Assuming FD_SETSIZE is the maximum file descriptor value
+    int max_fd = FD_SETSIZE;
 
     printf("File descriptors in the set:\n");
     for (int fd = 0; fd < max_fd; ++fd) {
@@ -53,7 +53,6 @@ int select_socket(fd_set *working_set, int max_sd, int *rc) {
 }
 int accept_socket(fd_set *working_set , int i, int *max_sd, int *new_sd, int *end_server, fd_set *master_set) {
     std::cout << " Listening socket is readable" << std::endl;
-    // std::cout << "i = " << i << std::endl;
     *new_sd = accept(i, NULL, NULL);
     if(*new_sd < 0) {
         if(errno != EWOULDBLOCK) {
@@ -106,17 +105,15 @@ void readable_sock(int i, fd_set *master_set, int *max_sd, std::map<int, WBS::Cl
         }
 
         if(clients.find(i)->second.get_buffer().find("\r\n\r\n") != std::string::npos) {
-        
-            // std::cout << "buffer = " << clients.find(i)->second.get_buffer() << std::endl;
             clients.find(i)->second.parse_request();
             std::cout << "method = " << clients.find(i)->second.get_request().method << std::endl;
             std::cout << "path = " << clients.find(i)->second.get_request().path << std::endl;
             std::cout << "http_version = " << clients.find(i)->second.get_request().http_version << std::endl;
-            std::cout << "host = " << clients.find(i)->second.get_request().host << std::endl;
-            // std::cout << "buffer = " << clients.find(i)->second.get_buffer() << std::endl;
-            
-            
-
+            std::map<std::string, std::string>::const_iterator iter;
+            const std::map<std::string, std::string>& headers = clients.find(i)->second.get_request().headers;
+            for (iter = headers.begin(); iter != headers.end(); ++iter) {
+                std::cout << iter->first << " : " << iter->second << std::endl;
+            }
         }
 
      
