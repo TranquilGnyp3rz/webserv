@@ -36,11 +36,11 @@ void Config::Check_complete_config_object()
             print_error_exit("Unvalid value for port (listen)");
         if (it->get_host() == "")
             it->set_host("127.0.0.1");
-        if (!is_valid_ip(it->get_host()))
+        if (!is_valid_host(it->get_host()))
             print_error_exit("Unvalid value for host");
         if (it->get_server_name().find(" ") != std::string::npos)
             print_error_exit("Unvalid value for server_name (don't use space)");
-        if (!is_valid_index(it->get_index()))
+        if (!is_valid_index(it->get_index()) && it->get_index() != "")
             print_error_exit("Unvalid value for index");
         if (it->get_error_pages().size() == 0)
             print_error_exit("Error_page is missing");
@@ -50,28 +50,42 @@ void Config::Check_complete_config_object()
         if (it->get_uploadPath() == "")
             print_error_exit("Upload_path is missing");
         if(it->get_uploadPath().find(" ") != std::string::npos)
-            print_error_exit("Unvalid value for upload_path (don't use space)");
+            print_error_exit("Unvalid value for upload_path");
+        if (it->get_cgiextension().size() == 0)
+            print_error_exit("Cgi extension is missing");
+        for (std::vector<std::string>::iterator it2 = it->get_cgiextension().begin(); it2 != it->get_cgiextension().end(); it2++)
+        {
+            if (*it2 != ".py" && *it2 != ".sh" && *it2 != ".php")
+                print_error_exit("Unvalid value for cgi extension");
+        }
 
         //-------------------------location---------------------------------
         if (it->get_locations().size() == 0)
-            print_error_exit("Missing location");
+            print_error_exit("Location block is missing");
         for (std::vector<Location>::iterator it2 = it->get_locations().begin(); it2 != it->get_locations().end(); it2++)
         {
             if (it2->get_locationName() == "")
-                print_error_exit("Missing location_name");
+                it2->set_locationName("/");
             if (it2->get_root() == "")
-                print_error_exit("Missing root");
+                print_error_exit("Need to specify a root for location block");
+            if (it2->get_root().find(" ") != std::string::npos)
+                print_error_exit("Unvalid value for root");
             if (it2->get_index() == "")
                 it2->set_index(it->get_index());
+            if (it2->get_index().find(" ") != std::string::npos)
+                print_error_exit("Unvalid value for index");
             if (it2->get_autoIndex() == "")
                 it2->set_autoIndex("off");
+            if (it2->get_autoIndex() != "on" && it2->get_autoIndex() != "off")
+                print_error_exit("Unvalid value for autoindex");
+            if (it2->get_redirection().find(" ") != std::string::npos)
+                print_error_exit("Unvalid value for redirection");
             if (it2->get_allowedMethods().size() == 0)
                 print_error_exit("Missing allowed_methods");
-            // if (it2->get_redirection() == "")
-            //     print_error_exit("Missing redirection");
+            if (is_valid_methods(it2->get_allowedMethods()).size() != 0)
+                print_error_exit("Unvalid method for allowed_methods : " + is_valid_methods(it2->get_allowedMethods()));
         }
     }
-
 }
 
 void Config::Check_configFile()
@@ -89,7 +103,6 @@ void Config::Parse_ConfigFile()
 {
     std::string line;
     std::string line_trimmed;
-    // std::string line_trimmed2;
     while (getline(_configfile, line))
     {
         /*-----------------------Skip spaces and remove comments-----------------------*/
@@ -149,13 +162,8 @@ void Config::Parse_ConfigFile()
                     line_trimmed = line_trimmed.substr(0, pos);
                 }
                 Fill_location_attribute(line_trimmed, location);
-                // continue;
             }
             _servers.back().set_locations(location);
-            // fill all the location and push it to the vector of location after the while loop
-            // size_t pos = line_trimmed.find('{');
-            // use substr().
-
         }
 
         /*-----------------------We are in a scoop of server-----------------------*/
@@ -173,13 +181,10 @@ void Config::Parse_ConfigFile()
                     _serverBlock = false;
                 continue;
             }
-
             Fill_server_attribute(line_trimmed);
         }
-        // std::stringstream ss(line_trimmed);
         else
             print_error_exit("Invalid config file");
-
     }
     _configfile.close();
 }
@@ -189,7 +194,6 @@ void Config::Fill_location_attribute(std::string line_trimmed, Location& locatio
     std::string key;
     std::string value;
     std::string checker;
-    // std::cout << "line :" << line_trimmed << std::endl;
     if (line_trimmed.find(';') == std::string::npos)
         print_error_exit("Missing ';' in location scoop : [ " + line_trimmed + " ]");
     std::stringstream ss(line_trimmed);
@@ -198,8 +202,6 @@ void Config::Fill_location_attribute(std::string line_trimmed, Location& locatio
     value = trim_line(value);
     ss >> checker;
     
-    // if (value.empty())
-    //     print_error_exit("Missing value after key");
     if (key == "autoindex" && checker.size() == 0){
         if (value.empty())
             print_error_exit("Missing value after key");
@@ -235,13 +237,7 @@ void Config::Fill_location_attribute(std::string line_trimmed, Location& locatio
 
     }
     else
-    {
-        // std::cout << "key : [" << key << "]" << std::endl;
-        // std::cout << "value : [" << value << "]" << std::endl;
-        // std::cout << "checker : [" << checker.empty() << "]" << std::endl;
         print_error_exit("Unknown key : [ " + key + " ]");
-    }
-    // return;
 }
 
 void Config::Fill_server_attribute(std::string line_trimmed)
@@ -250,7 +246,7 @@ void Config::Fill_server_attribute(std::string line_trimmed)
     std::string key;
     std::string value;
     std::string checker;
-    // std::cout << "line :" << line_trimmed << std::endl;
+
     if (line_trimmed.find(';') == std::string::npos)
         print_error_exit("Missing ';' in server scoop");
     std::stringstream ss(line_trimmed);
@@ -258,16 +254,6 @@ void Config::Fill_server_attribute(std::string line_trimmed)
     std::getline(ss, value, ';');
     value = trim_line(value);
     ss >> checker;
-    // std::cout << "key :[" << key << "]" << std::endl;
-    // std::cout << "value :[" << value << "]" << std::endl;
-    // std::cout << "checker :[" << checker << "]"<< std::endl;
-    // std::string::size_type pos = line_trimmed.find(" ");
-    // if (pos == std::string::npos)
-    //     print_error_exit("Missing space between key and value");
-    // key = line_trimmed.substr(0, pos);
-    // value = line_trimmed.substr(pos + 1);
-    // if (value.empty())
-    //     print_error_exit("Missing value after key");
     if (key == "listen" && checker.size() == 0){
         if (value.empty())
             print_error_exit("Missing value after key : "+ key);
@@ -283,8 +269,6 @@ void Config::Fill_server_attribute(std::string line_trimmed)
             print_error_exit("Missing value after key : "+ key);
         _servers.back().set_server_name(value);
     }
-    // else if (key == "root" && checker.size() == 0)
-    //     _servers.back().set_root(value);
     else if (key == "index" && checker.size() == 0){
         if (value.empty())
             print_error_exit("Missing value after key : "+ key);
@@ -328,7 +312,6 @@ void Config::Fill_server_attribute(std::string line_trimmed)
             value = value.substr(posp + 1);
             value = trim_line(value);
             if (posp == std::string::npos){
-                // print_error_exit("Missing error_page path after error code : " + error_code);
                 break;
             }
         }
@@ -365,8 +348,6 @@ void Config::Fill_server_attribute(std::string line_trimmed)
     
     else
         print_error_exit("Unknown key : [ " + key + " ]");
-    // return;
-
 }
 
 bool is_number(const std::string str) {
@@ -390,7 +371,7 @@ bool check_zero_ip(std::string ip)
     return false;
 }
 
-bool is_valid_ip(std::string ip)
+bool is_valid_host(std::string ip)
 {
     std::string::size_type pos = ip.find(".");
     if (pos == std::string::npos)
@@ -435,6 +416,16 @@ bool is_valid_index(std::string index)
     return true;
 }
 
+std::string is_valid_methods(std::vector<std::string> methods)
+{
+    for (std::vector<std::string>::iterator it = methods.begin(); it != methods.end(); it++)
+    {
+        if (*it != "GET" && *it != "POST" && *it != "DELETE")
+            return *it;
+    }
+    return "";
+}
+
 bool is_empty(std::ifstream &ifile)
 {
     return ifile.peek() == std::ifstream::traits_type::eof();
@@ -471,7 +462,6 @@ void Config::Print_vector()
         std::cout << "listen : [" << it->get_listen() << "]" << std::endl;
         std::cout << "host : [" << it->get_host() << "]" << std::endl;
         std::cout << "server_name : [" << it->get_server_name() << "]" << std::endl;
-        // std::cout << "root : [" << it->get_root() << "]" << std::endl;
         std::cout << "index : [" << it->get_index() << "]" << std::endl;
         std::cout << "client_max_body_size : [" << it->get_clientMaxBodySize() << "]" << std::endl;
         std::cout << "upload_path : [" << it->get_uploadPath() << "]" << std::endl;

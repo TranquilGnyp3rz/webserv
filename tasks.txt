@@ -7,3 +7,7 @@
 
 7- check number (listen, host, client_max_body_size, error_pages)
 8- check access to all paths.
+
+//*****************
+1- still extension_paths.
+2- still to handle ; after key ("autoindex;")
