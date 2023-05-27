@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   SocketServer.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: akhouya <akhouya@student.42.fr>            +#+  +:+       +#+        */
+/*   By: heloufra <heloufra@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/19 11:56:13 by akhouya           #+#    #+#             */
-/*   Updated: 2023/05/21 11:51:16 by akhouya          ###   ########.fr       */
+/*   Updated: 2023/05/27 17:59:00 by heloufra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,6 @@
 #include <sys/time.h>
 #include <fcntl.h>
 #include <unistd.h>
-//create class simplesocket in namespace wbs
 
 namespace WBS {
     class SocketServer {
