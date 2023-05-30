@@ -1,7 +1,7 @@
 #include "../../inc/tmp/request.hpp"
-#include "../../inc/tmp/client.hpp"
+#include "../../inc/tmp/Client.hpp"
 
-int method_DELETE(Client client)
+int method_DELETE(WBS::Client client)
 {
     // std::string root = server.get_root();
     // std::string full_path = root + path;
