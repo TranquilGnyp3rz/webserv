@@ -11,3 +11,7 @@
 //*****************
 1- still extension_paths.
 2- still to handle ; after key ("autoindex;")
+
+//***********
+for cgi envirenment variables : 1- take the env of the int main
+                                2- add "HTTP_" + toupper(key header) + "=" + value header;
