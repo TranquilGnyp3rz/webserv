@@ -31,6 +31,9 @@ class Config{
         void Print_vector();
         void Check_complete_config_object();                                 // check if the config object is valid
 
+        // getters
+        std::vector<Server>& get_servers();
+
 };
     //                      outil
     bool is_empty(std::ifstream &ifile);                               // check if the file is empty
@@ -42,5 +45,7 @@ class Config{
     bool check_zero_ip(std::string ip);                            // check if the ip is not like 127.00.1.1
     bool is_valid_index(std::string index);                        // check if the index is valid
     std::string is_valid_methods(std::vector<std::string> methods);                      // check if the method is valid
+
+
 
 #endif

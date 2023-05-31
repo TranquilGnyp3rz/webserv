@@ -19,7 +19,7 @@ void Config::Handle_configFile(std::string filepath)
         print_error_exit("Curlebracket '}' is missing");
     // Print_vector();
     Check_complete_config_object();
-    Print_vector();
+    // Print_vector();
 }
 
 void Config::Check_complete_config_object()
@@ -452,6 +452,10 @@ std::string trim_line(std::string line)
     return line;
 }
 
+std::vector<Server>& Config::get_servers()
+{
+    return _servers;
+}
 
 void Config::Print_vector()
 {

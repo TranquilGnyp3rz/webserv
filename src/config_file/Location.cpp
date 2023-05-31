@@ -11,8 +11,21 @@ Location::Location()
     _redirection = "";
 }
 
+Location::Location(const Location &b)
+{
+    _locationNumber = b._locationNumber;
+    _locationName = b._locationName;
+    _root = b._root;
+    _index = b._index;
+    _autoIndex = b._autoIndex;
+    // _uploadPath = b._uploadPath;
+    _redirection = b._redirection;
+    _allowedMethods = b._allowedMethods;
+}
+
 Location::~Location()
 {
+    
 }
 
 /*seters*/

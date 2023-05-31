@@ -18,6 +18,7 @@ class Location
     public:
         Location();
         ~Location();
+        Location(const Location &b);
 
     /*seters*/
         void set_locationNumber(int locationNumber);
