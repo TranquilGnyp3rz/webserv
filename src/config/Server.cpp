@@ -1,4 +1,4 @@
-#include "../../inc/config_file/Server.hpp"
+#include "Server.hpp"
 
 Server::Server()
 {

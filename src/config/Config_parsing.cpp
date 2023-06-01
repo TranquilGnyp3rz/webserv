@@ -1,4 +1,4 @@
-#include "../../inc/config_file/Config_parsing.hpp"
+#include "Config_parsing.hpp"
 
 Config::Config(): _serverBlock(false)
 {

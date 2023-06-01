@@ -8,7 +8,7 @@
 #include <map>
 #include <vector>
 #include <utility>
-#include "./Server.hpp"
+#include "Server.hpp"
 
 
 class Config{
