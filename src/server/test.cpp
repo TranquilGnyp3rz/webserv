@@ -1,20 +1,21 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   macros.hpp                                         :+:      :+:    :+:   */
+/*   test.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: heloufra <heloufra@student.42.fr>          +#+  +:+       +#+        */
+/*   By: heloufra <heloufra@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/05/18 20:43:22 by heloufra          #+#    #+#             */
-/*   Updated: 2023/05/18 20:44:10 by heloufra         ###   ########.fr       */
+/*   Created: 2023/06/01 16:28:52 by heloufra          #+#    #+#             */
+/*   Updated: 2023/06/01 16:30:41 by heloufra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef MACROS_HPP
-# define MACROS_HPP
+#include "WebServer.hpp"
 
-# define MAX_CONNECTION 10
-# define MAX_BUFFER 1024
-# define PORT 8080
 
-#endif
+int main()
+{
+    WebServer server = WebServer();
+    server.run();
+    return 0;
+}
