@@ -1,7 +1,7 @@
 
 #include "../../inc/config_file/Config_parsing.hpp"
-#include "../../inc/tmp/client.hpp"
-#include "../../inc/tmp/delete.hpp"
+#include "../../inc/code_delete/client.hpp"
+#include "../../inc/code_delete/delete.hpp"
 
 int main(int ac, char **av, char **env)
 {
@@ -11,8 +11,9 @@ int main(int ac, char **av, char **env)
         cf.Handle_configFile(av[1]);
     }
     std::cout << "done" << std::endl;
+
     WBS::Client client(1);
-    int i = method_DELETE(client, cf);
+    int i = code_DELETE(client, cf);
     std::cout << i << std::endl;
     return 0;
 }
