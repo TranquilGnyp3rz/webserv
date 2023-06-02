@@ -96,14 +96,6 @@ std::string search_location(Config& config, WBS::Client& client, std::string pat
     if (locations.size() == 0)
         return "";
 
-            // std::cout << "Location found" << std::endl;
-            //     for(std::vector<Location>::iterator it = locations.begin(); it != locations.end(); it++)
-            //     {
-            //     std::cout << it->get_locationName() << std::endl;
-            //     std::cout << it->get_root() << std::endl;
-            //     std::cout << "-------------------" << std::endl;
-            //     }
-
     /*---------here we have the location all the locations that match the path, we need to find the one with the longest path-------------*/
     std::vector<Location>::iterator it2 = locations.begin();
     for(std::vector<Location>::iterator it = locations.begin(); it != locations.end(); it++)
@@ -111,17 +103,13 @@ std::string search_location(Config& config, WBS::Client& client, std::string pat
         if (it->get_locationName().length() > it2->get_locationName().length())
             it2 = it;
     }
-            // std::cout << "Location with longest path: " << it2->get_locationName() << std::endl;
-            // std::cout << "Root: " << it2->get_root() << std::endl;
-
     std::string root = it2->get_root();
     std::string path_no_location = path.substr(it2->get_locationName().length() + 1);   // myfile.txt
     std::string full_path = root + path_no_location;                                // ./media/myfile.txt
-            // std::cout << "Full path: " << full_path << std::endl;
     return full_path;        
 }
 
-int code_DELETE(WBS::Client client, Config& config)
+int code_DELETE(WBS::Client& client, Config& config)
 {
     
     std::string path = client.get_request().path;
@@ -135,4 +123,45 @@ int code_DELETE(WBS::Client client, Config& config)
         return 404;
 
     return (code_check_delete(full_path));
+}
+
+std::string getHttpResponse(int statusCode) {
+    std::string httpResponse;
+
+    switch (statusCode) {
+        case 200:
+            httpResponse = "HTTP/1.1 200 OK\n";
+            httpResponse += "Content-Type: application/json\n\n";
+            httpResponse += "{\n";
+            httpResponse += "  \"message\": \"Resource deleted successfully.\"\n";
+            httpResponse += "}\n";
+            break;
+        case 204:
+            httpResponse = "HTTP/1.1 204 No Content\n";
+            break;
+        case 403:
+            httpResponse = "HTTP/1.1 403 Forbidden\n";
+            break;
+        case 404:
+            httpResponse = "HTTP/1.1 404 Not Found\n";
+            break;
+        case 409:
+            httpResponse = "HTTP/1.1 409 Conflict\n";
+            break;
+        case 500:
+            httpResponse = "HTTP/1.1 500 Internal Server Error\n";
+            break;
+        default:
+            httpResponse = "HTTP/1.1 500 Internal Server Error\n";
+            break;
+    }
+
+    return httpResponse;
+}
+void send_Response(WBS::Client client, Config& config)
+{
+    int statusCode = code_DELETE(client, config);
+    std::string httpResponse = getHttpResponse(statusCode);
+    std::cout << httpResponse << std::endl;
+    //still to write in the socket
 }

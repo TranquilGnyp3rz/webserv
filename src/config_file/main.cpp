@@ -10,10 +10,9 @@ int main(int ac, char **av, char **env)
     if (ac == 2){
         cf.Handle_configFile(av[1]);
     }
-    std::cout << "done" << std::endl;
+    // std::cout << "done" << std::endl;
 
     WBS::Client client(1);
-    int i = code_DELETE(client, cf);
-    std::cout << i << std::endl;
+    send_Response(client, cf);
     return 0;
 }
