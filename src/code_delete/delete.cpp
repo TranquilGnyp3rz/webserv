@@ -74,7 +74,7 @@ int code_check_delete(std::string path)
         }
 
     }
-return 204;
+return 200;
 }
 
 std::string search_location(Config& config, WBS::Client& client, std::string path)
@@ -113,7 +113,7 @@ int code_DELETE(WBS::Client& client, Config& config)
 {
     
     std::string path = client.get_request().path;
-    path = "/okey/my/folder/myfile/";             // get it from client -> request -> path
+    path = "/okey/my/folder/myfile.txt";             // get it from client -> request -> path
     request_t request;                              // get it from client -> request
     request.host = "127.0.0.1:8002";                // get it from client -> request -> host
     client.set_request(request);                    // already done in client
