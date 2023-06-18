@@ -6,7 +6,7 @@
 /*   By: akhouya <akhouya@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/19 11:56:18 by akhouya           #+#    #+#             */
-/*   Updated: 2023/05/21 12:59:03 by akhouya          ###   ########.fr       */
+/*   Updated: 2023/06/01 13:26:16 by akhouya          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,4 +94,26 @@ void WBS::SocketServer::connect_to_network(int sock) {
 
 WBS::SocketServer::~SocketServer() {
     // close(_sock);
+}
+
+//copy constructor
+WBS::SocketServer::SocketServer(const SocketServer &other) {
+    *this = other;
+}
+
+//copy assignment operator
+WBS::SocketServer &WBS::SocketServer::operator=(const SocketServer &other) {
+    if (this != &other) {
+        _address = other._address;
+        _sock = other._sock;
+        _connection = other._connection;
+        _port = other._port;
+        _domain = other._domain;
+    }
+    return *this;
+}
+
+// get port
+int WBS::SocketServer::get_port() {
+    return _port;
 }
