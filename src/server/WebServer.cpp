@@ -64,13 +64,16 @@ void WebServer::accepter(std::vector<SocketServer> sockets, fd_set *master_set, 
 {
     int new_sd, rc, i;
     int desc_ready, end_Webserver = false;
-    fd_set working_set;
+    fd_set working_set, response_set;
 
+    memset(&working_set, 0, sizeof(working_set));
+    memset(&response_set, 0, sizeof(response_set));
     while (end_Webserver == false)
     {
+
         memcpy(&working_set, master_set, sizeof(*master_set));
         std::cout << "Waiting on select()..." << std::endl;
-        if (select_socket(&working_set, *max_sd, &rc) == -1)
+        if (select_socket(&working_set, *max_sd, &rc, &response_set) == -1)
             break;
         desc_ready = rc;
         for (i = 3; i <= *max_sd && desc_ready > 0; i++)
@@ -84,13 +87,26 @@ void WebServer::accepter(std::vector<SocketServer> sockets, fd_set *master_set, 
                         break;
                 }
                 else
-                    handler(i, master_set, max_sd);
+                    handler(i, master_set, max_sd, &response_set);
+            }
+            if (FD_ISSET(i , &response_set))
+            {
+                std::cout << "Discriptor " << i << "is writeable" << std::endl;
+                // if (_clients.find(i) != _clients.end())
+                // {
+                //     _clients.find(i)->second.send_response(i);
+                //     if (_clients.find(i)->second.get_response().empty())
+                //     {
+                //         FD_CLR(i, master_set);
+                //         _clients.erase(i);
+                //     }
+                // }
             }
         }
     }
 }
 
-void WebServer::handler(int i, fd_set *master_set, int *max_sd)
+void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response_set)
 {
 
     std::cout << "Discriptor " << i << "is readale" << std::endl;
@@ -141,7 +157,7 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd)
         //         std::cout << iter->first << " : " << iter->second << std::endl;
         //     }
         // }
-        rc = responder(_clients.find(i)->second);
+        // rc = responder(_clients.find(i)->second);
 
         if (rc < 0)
         {
@@ -152,7 +168,8 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd)
     }
     if (close_conn)
     {
-        close(i);
+        // close(i);
+        FD_SET(i, response_set);
         FD_CLR(i, master_set);
         if (i == *max_sd)
         {
@@ -179,10 +196,10 @@ int WebServer::responder(Client &client)
 }
 
 
-int WebServer::select_socket(fd_set *working_set, int max_sd, int *rc)
+int WebServer::select_socket(fd_set *working_set, int max_sd, int *rc, fd_set *response_set)
 {
 
-    *rc = select(max_sd + 1, working_set, NULL, NULL, NULL);
+    *rc = select(max_sd + 1, working_set, response_set, NULL, NULL);
     if (*rc < 0)
     {
         perror("  select() failed");
