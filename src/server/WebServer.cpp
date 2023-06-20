@@ -169,6 +169,8 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response
     if (close_conn)
     {
         // close(i);
+        std::cout << "  Connection closed " << i << std::endl;
+
         FD_SET(i, response_set);
         FD_CLR(i, master_set);
         if (i == *max_sd)

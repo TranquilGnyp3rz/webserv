@@ -53,6 +53,8 @@ class WebServer
         void accepter(std::vector<SocketServer> sockets, fd_set *master_set, int *max_sd);
         void handler(int i, fd_set *master_set, int *max_sd, fd_set *response_set);
         /* Request */
+        int check_request(Client &client);
+        
         int well_formed_request(Client &client);
         
     public:
