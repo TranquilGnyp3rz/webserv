@@ -45,7 +45,7 @@ int select_socket(fd_set *working_set, int max_sd, int *rc)
     }
     return 0;
 }
-int accept_socket(fd_set *working_set, int i, int *max_sd, int *new_sd, int *end_server, fd_set *master_set, std::map<int, WBS::Client> &clients, int ports)
+int accept_socket(fd_set *working_set, int i, int *max_sd, int *new_sd, int *end_server, fd_set *master_set, std::map<int, Client> &clients, int ports)
 {
     std::cout << " Listening socket is readable" << std::endl;
     *new_sd = accept(i, NULL, NULL);
@@ -63,7 +63,7 @@ int accept_socket(fd_set *working_set, int i, int *max_sd, int *new_sd, int *end
     {
         std::cout << "  New incoming connection - " << *new_sd << std::endl;
         FD_SET(*new_sd, master_set);
-        clients.insert(std::make_pair(*new_sd, WBS::Client(ports, *new_sd)));
+        clients.insert(std::make_pair(*new_sd, Client(ports, *new_sd)));
         std::cout << "body lenght " << clients.find(*new_sd)->second.get_request().lenght_body<< std::endl;
         if (*new_sd > *max_sd)
         {
@@ -100,7 +100,7 @@ void read_from_file(const std::string filename)
         std::cout << "Unable to open the file." << std::endl;
     }
 }
-void readable_sock(int i, fd_set *master_set, int *max_sd, std::map<int, WBS::Client> &clients)
+void readable_sock(int i, fd_set *master_set, int *max_sd, std::map<int, Client> &clients)
 {
 
     std::cout << "Discriptor " << i << "is readale" << std::endl;
@@ -187,9 +187,9 @@ void readable_sock(int i, fd_set *master_set, int *max_sd, std::map<int, WBS::Cl
     }
 }
 // find a integer in socketserver class by _sock
-int find_socket(std::vector<WBS::SocketServer> sockets, int sock)
+int find_socket(std::vector<SocketServer> sockets, int sock)
 {
-    std::vector<WBS::SocketServer>::iterator it;
+    std::vector<SocketServer>::iterator it;
     for (it = sockets.begin(); it != sockets.end(); it++)
     {
         if (it->get_sock() == sock)
@@ -197,9 +197,9 @@ int find_socket(std::vector<WBS::SocketServer> sockets, int sock)
     }
     return 1;
 }
-int find_sockets(std::vector<WBS::SocketServer> sockets, int sock)
+int find_sockets(std::vector<SocketServer> sockets, int sock)
 {
-    std::vector<WBS::SocketServer>::iterator it;
+    std::vector<SocketServer>::iterator it;
     for (it = sockets.begin(); it != sockets.end(); it++)
     {
         if (it->get_sock() == sock)
@@ -207,7 +207,7 @@ int find_sockets(std::vector<WBS::SocketServer> sockets, int sock)
     }
     return 1;
 }
-int find_client(std::vector<WBS::Client> clients, int sock)
+int find_client(std::vector<Client> clients, int sock)
 {
 
     for (int i = 0; i < clients.size(); i++)
@@ -217,12 +217,12 @@ int find_client(std::vector<WBS::Client> clients, int sock)
     }
     return 0;
 }
-void multiplexing(std::vector<WBS::SocketServer> sockets, fd_set *master_set, int *max_sd)
+void multiplexing(std::vector<SocketServer> sockets, fd_set *master_set, int *max_sd)
 {
     int new_sd, rc, i;
     int desc_ready, end_server = false;
     fd_set working_set;
-    std::map<int, WBS::Client> clients;
+    std::map<int, Client> clients;
     while (end_server == false)
     {
 
@@ -257,11 +257,11 @@ int main()
     ports.push_back(7000);
     ports.push_back(9088);
     int max_sd, i;
-    std::vector<WBS::SocketServer> sockets;
+    std::vector<SocketServer> sockets;
     FD_ZERO(&master_set);
     for (i = 0; i < ports.size(); i++)
     {
-        sockets.push_back(WBS::SocketServer(AF_INET6, SOCK_STREAM, 0, ports[i], INADDR_ANY));
+        sockets.push_back(SocketServer(AF_INET6, SOCK_STREAM, 0, ports[i], INADDR_ANY));
         std::cout << "socket = " << sockets[i].get_sock() << std::endl;
         max_sd = sockets[i].get_sock();
         FD_SET(sockets[i].get_sock(), &master_set);

@@ -45,7 +45,7 @@ static int deleteFile(const char* path, const struct stat* sb, int typeflag, str
 }
 
 
-int method_DELETE(WBS::Client client, Config& config)
+int method_DELETE(Client client, Config& config)
 {
     
     std::string path = client.get_request().path;

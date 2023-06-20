@@ -38,7 +38,7 @@ std::string trim(const std::string& str)
     return s;
 }
 //get port
-int WBS::Client::get_port() {
+int Client::get_port() {
     return _port;
 }
 static std::vector<std::string>    split_words(const std::string &str, char c) {
@@ -121,10 +121,10 @@ static request_t split_lines(const std::string &str) {
     return request;
 }
 
-// WBS::Client::Client(int sock) {
-//     _sock = sock;
-// }
-WBS::Client::Client(int port, int sock) {
+Client::Client(int sock) {
+    _sock = sock;
+}
+Client::Client(int port, int sock) {
     _request.lenght_body = 0;
     _port = port;
     _sock = sock;
@@ -161,7 +161,8 @@ void Client::parse_request() {
 }
 
 
-void WBS::Client::save_body(std::string &buffer, int size_buffer) {
+void Client::save_body(std::string &buffer, int size_buffer) {
+    (void)size_buffer;
     std::string::size_type pos = buffer.find("\r\n\r\n");
     
     std::string body = buffer.substr(pos + 4);

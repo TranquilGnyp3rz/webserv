@@ -1,20 +1,23 @@
 NAME= webserv
 
-SRC = ./src/config_file/main.cpp ./src/config_file/Config_parsing.cpp ./src/config_file/Server.cpp ./src/config_file/Location.cpp ./src/tmp/delete.cpp ./src/tmp/client.cpp \
+SRC = ./src/main.cpp ./src/config/Config_parsing.cpp ./src/config/Server.cpp ./src/config/Location.cpp  ./src/network/Client.cpp ./src/network/SocketServer.cpp ./src/server/WebServer.cpp
 
 CC = c++
-FLAGS= -Wall -Werror -Wextra -std=c++98 -fsanitize=address -g3
+FLAGS= -std=c++98 #-fsanitize=address -g3
 PARA  = -c 
 
 OBJ= $(SRC:.cpp=.o)
 
-%.o : %.cpp 
-	@$(CC) $(PARA) $(FLAGS) $<  -o $@
+
+test: 
+	echo $(OBJ)
 
 all: $(NAME)
 	
 $(NAME): $(OBJ)
-		@${CC} $(OBJ) $(FLAGS) -o ${NAME} 
+		@${CC} $(OBJ) -I./inc $(FLAGS) -o ${NAME} 
+%.o : %.cpp 
+	@$(CC) $(PARA) -I./inc $(FLAGS) $<  -o $@
 
 clean:
 	rm -rf $(OBJ)

@@ -24,19 +24,15 @@
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
-// create class simplesocket in namespace wbs
 
-namespace WBS
+class SocketServer
 {
-    class SocketServer
-    {
     private:
         sockaddr_in6 _address;
         int _sock;
         int _connection;
         int _port;
         int _domain;
-
     public:
         SocketServer();
         SocketServer(int domain, int service, int protocol, int port, u_long interface);
@@ -53,7 +49,6 @@ namespace WBS
         SocketServer &operator=(const SocketServer &other);
         
         ~SocketServer();
-    };
-}
+};
 
 #endif

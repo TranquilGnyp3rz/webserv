@@ -11,7 +11,7 @@ int main(int ac, char **av, char **env)
         cf.Handle_configFile(av[1]);
     }
     std::cout << "done" << std::endl;
-    WBS::Client client(1);
+    Client client(1);
     int i = method_DELETE(client, cf);
     std::cout << i << std::endl;
     return 0;

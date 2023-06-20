@@ -1,9 +1,13 @@
-#include "Server.hpp"
-#include "Socket.hpp"
+#include "WebServer.hpp"
+#include "SocketServer.hpp"
 
-int main()
+int main(int argc, char *argv[])
 {
-    Server server(8080);
+    if (argc != 2)
+    {
+        exit(1);
+    }
+    WebServer server(argv[1]);
     server.run();
     return 0;
 }

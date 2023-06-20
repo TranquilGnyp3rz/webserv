@@ -50,36 +50,36 @@ static request_t split_lines(const std::string &str) {
     return request;
 }
 
-WBS::Client::Client(int sock) {
+Client::Client(int sock) {
     _sock = sock;
 }
 
-request_t WBS::Client::get_request() {
+request_t Client::get_request() {
     return _request;
 }
 
-void WBS::Client::set_request(request_t request) {
+void Client::set_request(request_t request) {
     _request = request;
 }
 
 
-std::string WBS::Client::get_buffer() {
+std::string Client::get_buffer() {
     return _buffer;
 }
 
 
-void WBS::Client::set_buffer(std::string buffer) {
+void Client::set_buffer(std::string buffer) {
     _buffer = buffer;
 }
 
-int WBS::Client::get_sock() {
+int Client::get_sock() {
     return _sock;
 }
 
-void WBS::Client::set_sock(int sock) {
+void Client::set_sock(int sock) {
     _sock = sock;
 }
 
-void WBS::Client::parse_request() {
+void Client::parse_request() {
     _request = split_lines(_buffer);
 }

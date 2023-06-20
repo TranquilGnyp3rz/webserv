@@ -19,27 +19,26 @@
 #include <sstream>
 #include "request.hpp"
 #include "SocketServer.hpp"
-namespace WBS
-{
-    private:
-        request_t _request;
-        std::string _buffer;
-        int _port;
-        int _sock;
-    public:
-        // Client(int sock);
-        Client(int port, int sock);
-        // void split_lines(const std::string &str);
-        // void split_words(const std::string &str);
-        void parse_request();
-        std::string get_buffer();
-        void set_buffer(std::string buffer);
-        int get_sock();
-        void set_sock(int sock);
-        request_t get_request();
-        //get port
-        int get_port();
-        void set_request(request_t request);
-        void save_body(std::string &buffer, int size_buffer);
-    };
-}
+
+class Client {
+private:
+    request_t _request;
+    std::string _buffer;
+    int _port;
+    int _sock;
+public:
+    Client(int sock);
+    Client(int port, int sock);
+    // void split_lines(const std::string &str);
+    // void split_words(const std::string &str);
+    void parse_request();
+    std::string get_buffer();
+    void set_buffer(std::string buffer);
+    int get_sock();
+    void set_sock(int sock);
+    request_t get_request();
+    //get port
+    int get_port();
+    void set_request(request_t request);
+    void save_body(std::string &buffer, int size_buffer);
+};

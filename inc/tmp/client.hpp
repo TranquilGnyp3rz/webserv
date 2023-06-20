@@ -5,15 +5,13 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include "request.hpp"
-namespace WBS
+
+class Client
 {
-    class Client
-    {
     private:
         request_t _request;
         std::string _buffer;
         int _sock;
-
     public:
         Client(int sock);
         // void split_lines(const std::string &str);
@@ -25,5 +23,5 @@ namespace WBS
         void set_sock(int sock);
         request_t get_request();
         void set_request(request_t request);
-    };
-}
+};
+

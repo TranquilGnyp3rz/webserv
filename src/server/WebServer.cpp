@@ -36,7 +36,6 @@ WebServer::~WebServer()
 
 WebServer & WebServer::operator=(WebServer const & src)
 {
-
     return *this;
 }
 
@@ -142,7 +141,6 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd)
         //         std::cout << iter->first << " : " << iter->second << std::endl;
         //     }
         // }
-        // response 
         rc = responder(_clients.find(i)->second);
 
         if (rc < 0)

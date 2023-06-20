@@ -97,12 +97,12 @@ SocketServer::~SocketServer() {
 }
 
 //copy constructor
-WBS::SocketServer::SocketServer(const SocketServer &other) {
+SocketServer::SocketServer(const SocketServer &other) {
     *this = other;
 }
 
 //copy assignment operator
-WBS::SocketServer &WBS::SocketServer::operator=(const SocketServer &other) {
+SocketServer &SocketServer::operator=(const SocketServer &other) {
     if (this != &other) {
         _address = other._address;
         _sock = other._sock;
@@ -114,6 +114,6 @@ WBS::SocketServer &WBS::SocketServer::operator=(const SocketServer &other) {
 }
 
 // get port
-int WBS::SocketServer::get_port() {
+int SocketServer::get_port() {
     return _port;
 }
