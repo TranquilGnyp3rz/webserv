@@ -194,3 +194,8 @@ void Client::save_body(std::string &buffer, int size_buffer) {
     }
 }
     
+int Client::respond()
+{
+    this->_response.send(_sock);
+    return 0;
+}

@@ -189,7 +189,7 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response
             // }
             
         }
-        // rc = responder(_clients.find(i)->second);
+        rc = responder(_clients.find(i)->second);
 
 
         if (rc < 0)
@@ -223,16 +223,8 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response
 
 int WebServer::responder(Client &client)
 {
-    char buffer[10000];
-
-    std::cout << " Client's request: " << std::endl;
-    std::cout << client.get_buffer() << std::endl;
-
-    std::string response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<html><body><h1>Hello, World!</h1></body></html>\r\n\r\n";
-    strcpy(buffer, response.c_str());
-    int rc = send(client.get_sock(), buffer, strlen(buffer), 0);
-    std::cout << "  " << rc << " bytes sent" << std::endl;
-    return rc;
+    client.respond();
+    return 0;
 }
 
 

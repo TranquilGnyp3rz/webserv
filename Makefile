@@ -8,10 +8,6 @@ PARA  = -c
 
 OBJ= $(SRC:.cpp=.o)
 
-
-test: 
-	echo $(OBJ)
-
 all: $(NAME)
 	
 $(NAME): $(OBJ)
