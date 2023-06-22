@@ -46,7 +46,7 @@ class WebServer
         
         /* Networking */
         int select_socket(fd_set *working_set, int max_sd, int *rc, fd_set *response_set);
-        int accept_socket(fd_set *working_set, int i, int *max_sd, int *new_sd, int *end_Webserver, fd_set *master_set);
+        int accept_socket(fd_set *working_set, int i, int *max_sd, int *new_sd, int *end_Webserver, fd_set *master_set, std::map<int, Client> &clients, int ports);
         void readable_sock(int i, fd_set *master_set, int *max_sd, std::map<int, Client> &clients);
         int find_socket(std::vector<SocketServer> sockets, int sock);
         int find_client(std::vector<Client> clients, int sock);
