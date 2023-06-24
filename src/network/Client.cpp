@@ -46,6 +46,7 @@ void write_in_file(std::string filename, std::string buffer) {
     file.open(filename, std::ios::out | std::ios::app);
     file << buffer;
     file.close();
+    // exit(0);
 
 
     // file.open(filename, std::ios::out | std::ios::app);
@@ -150,7 +151,7 @@ Client::Client(int sock) {
     _body_file.assign("ss");
 }
 Client::Client(int port, int sock) {
-    _request.lenght_body = 0;
+    _body_lenght = 0;
     _port = port;
     _sock = sock;
     _buffer = "";
@@ -202,40 +203,89 @@ void Client::save_body(std::string &buffer, int &close_conn) {
     // std::cout << "-----------" << std::endl;
     // std::cout <<  close_conn << std::endl;
     // std::cout << "-----------" << std::endl;
-    if(find_key(_request.headers, "Content-Type") == "chunked")
+    if(find_key(_request.headers, "Transfer-Encoding") == "chunked")
     {
-        while (body.find("\r\n") != std::string::npos)
-        {
-            int size = 0;
-            std::string::size_type pos = body.find("\r\n");
-            std::string size_str = body.substr(0, pos);
-            size = std::stoi(size_str, 0, 16);
-            
-            body = body.substr(pos + 2);
-            if(size == 0)
+        if (_body_lenght != 0) {
+            if (body.size() < _body_lenght + 2)
             {
-                read_from_file(_request.body_file);
-                close_conn = true;
-                break;
+                write_in_file(_body_file, body);
+                _body_lenght -= body.size();
             }
-            write_in_file(_request.body_file, body.substr(0, size));
-            body = body.substr(size + 2);
+            else {
+                write_in_file(_body_file, body.substr(0, _body_lenght));
+                body = body.substr(_body_lenght + 2);
+                _body_lenght = 0;
+                // close_conn = 1;
+            }
         }
+
+            while (body.find("\r\n") != std::string::npos)
+            {
+                
+                int size = 0;
+                
+                // while (body[size] != body.find("\r\n"))
+                // {
+                //     std::cout << "body[size]: " << body[size] << std::endl;
+                //     size++;
+                // }
+                    
+                std::string::size_type pos = body.find("\r\n");
+                std::string size_str = body.substr(0, pos);
+                std::cout << "pos" << pos << std::endl;
+                
+                // std::cout << "size_str: " << size_str << std::endl;
+                try {
+                    _body_lenght = std::stoi(size_str, 0, 16);
+                    std::cout << "----------lebnght" << _body_lenght << std::endl;
+                }
+                catch (std::exception &e) {
+                    std::cout << "error stoi" << std::endl;
+                    std::cout << e.what() << std::endl;
+                    close_conn = true;
+                    break;
+                }
+                // _body_lenght = std::stoi(size_str, 0, 16);
+                // std::cout << "----------lebnght" << _body_lenght << std::endl;
+                if(_body_lenght == 0)
+                {
+                    // read_from_file(_body_file);
+                    close_conn = true;
+                    break;
+                }
+                body = body.substr(pos + 2);
+                if (body.size() < _body_lenght + 2)
+                {
+                    write_in_file(_body_file, body);
+                    _body_lenght -= body.size();
+                    break;
+                }
+                write_in_file(_body_file, body.substr(0, _body_lenght));
+                body = body.substr(_body_lenght + 2);
+                // if (body.find("\r\n") == std::string::npos)
+                // {
+                //     _body
+                // }
+                _body_lenght = 0;
+            }
+        
+       
     }
     else if (find_key(_request.headers, "Content-Length") != "")
     {
+        // exit(0);
         int size = std::stoi(find_key(_request.headers, "Content-Length"));
-        if (_request.lenght_body  < size) {
+        if (_body_lenght  < size) {
             std::cout << "-------" << body << std::endl;
-            write_in_file(_body_file, body.substr(0, size - _request.lenght_body));
+            write_in_file(_body_file, body.substr(0, size - _body_lenght));
             std::ifstream in_file(_body_file, std::ios::binary);
             in_file.seekg(0, std::ios::end);
             int file_size = in_file.tellg();
-            _request.lenght_body = file_size;
-            // std::cout << _request.lenght_body  << "--------"<< size<< std::endl;
+            _body_lenght = file_size;
+            // std::cout << _body_lenght  << "--------"<< size<< std::endl;
             // std::cout << _body_file << std::endl;
         }
-        if (_request.lenght_body == size) {
+        if (_body_lenght == size) {
             // read_from_file(_request.body_file);
             close_conn = true;
         }

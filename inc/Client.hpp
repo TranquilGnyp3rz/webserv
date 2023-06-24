@@ -31,6 +31,7 @@ class Client {
         int _sock;
         bool _first_body;
         std::string _body_file;
+        int _body_lenght;
     public:
         Client(int sock);
         Client(int port, int sock);
