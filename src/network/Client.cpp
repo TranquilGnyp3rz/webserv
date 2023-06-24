@@ -155,6 +155,7 @@ Client::Client(int port, int sock) {
     _port = port;
     _sock = sock;
     _buffer = "";
+    _body = "";
     //assign number socket
     _body_file.assign(std::to_string(sock));
 }
@@ -236,6 +237,7 @@ void Client::save_body(std::string &buffer, int &close_conn) {
                 
                 // std::cout << "size_str: " << size_str << std::endl;
                 try {
+                    std::cout << "size_str: " << body << std::endl;
                     _body_lenght = std::stoi(size_str, 0, 16);
                     std::cout << "----------lebnght" << _body_lenght << std::endl;
                 }

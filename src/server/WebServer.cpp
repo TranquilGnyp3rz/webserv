@@ -153,7 +153,7 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response
     int close_conn = false;
     // std::cout << "close conne first" << close_conn << std::endl;
     int rc, len;
-    char buffer[500];
+    char buffer[10];
     // while (true)
     // {
         rc = recv(i, buffer, sizeof(buffer), 0);
@@ -214,6 +214,11 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response
                 std::string::size_type pos = _clients.find(i)->second.get_buffer().find("\r\n\r\n");
                 body = _clients.find(i)->second.get_buffer().substr(pos + 4);
                 _clients.find(i)->second.set_first_body(true);
+                // if (body.find("\r\n") != std::string::npos)
+                // {
+                //     _clients.find(i)->second.set_body(body);
+                //     return ;
+                // }
                 
                 
             }
@@ -226,20 +231,25 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response
             
             // body = body.erase(0, 2);
             // ;std::cout << "---------body = --------" << body << std::endl;
-            // std::cout << "pos" << body.find("\r\n") << std::endl; 
+
             
             // std::cout << "---------close_conn = --------" << close_conn << std::endl;
+            // if (_clients.find(i)->second.get_body() != "")
+            // {
+            //     body = _clients.find(i)->second.get_body() + body;
+            //     _clients.find(i)->second.set_body("");
+            // }
             _clients.find(i)->second.save_body( body, close_conn);
             // std::cout << "method = " << _clients.find(i)->second.get_request().method << std::endl;
             // std::cout << "path = " << _clients.find(i)->second.get_request().path << std::endl;
             // std::cout << "http_version = " << _clients.find(i)->second.get_request().http_version << std::endl;
-            // std::map<std::string, std::string>::const_iterator iter;
-            // const std::map<std::string, std::string> &headers = _clients.find(i)->second.get_request().headers;
-            // // close_conn = true;
-            // for (iter = headers.begin(); iter != headers.end(); ++iter)
-            // {
-            //     std::cout << iter->first << " : " << iter->second << std::endl;
-            // }
+            std::map<std::string, std::string>::const_iterator iter;
+            const std::map<std::string, std::string> &headers = _clients.find(i)->second.get_request().headers;
+            // close_conn = true;
+            for (iter = headers.begin(); iter != headers.end(); ++iter)
+            {
+                std::cout << iter->first << " : " << iter->second << std::endl;
+            }
             
             
         }

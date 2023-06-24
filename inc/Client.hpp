@@ -32,6 +32,7 @@ class Client {
         bool _first_body;
         std::string _body_file;
         int _body_lenght;
+        std::string _body;
     public:
         Client(int sock);
         Client(int port, int sock);
@@ -65,5 +66,11 @@ class Client {
         }
         std::string get_body_file() {
             return _body_file;
+        }
+        std::string get_body() {
+            return _body;
+        }
+        void set_body(std::string body) {
+            _body = body;
         }
 };
