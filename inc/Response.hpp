@@ -17,7 +17,11 @@
 # include <stdio.h>
 # include <stdlib.h>
 # include "SocketServer.hpp"
+# include "Client.hpp"
+# include "request.hpp"
+# include "marcos.hpp"
 
+class Client;
 
 class Response
 {
@@ -26,7 +30,14 @@ class Response
         std::map<std::string, std::string> fileExtensions;
     public:
         Response();
-        int send(int socket);
+        int send(int socket, Client &client, Config &config);
+        int send_error(int socket, int status);
+        int handleGet(int socket, std::string path);
+        int handlePost(int socket, std::string path);
+        int handleDelete(int socket, std::string path);
+        int handle(Client &client);
+        int is_request_well_formed(Client &client, request_t &request);
         std::string custom_error(const std::string& status);
+        bool containsAnyChar(const std::string& str, const std::string& charSet);
 };
 #endif 

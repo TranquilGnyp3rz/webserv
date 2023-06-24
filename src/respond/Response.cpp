@@ -1,53 +1,97 @@
 #include "Response.hpp"
 
-std::string Response::custom_error(const std::string& status) {
-    std::string htmlPage = "<html>\n";
-    htmlPage += "<head>\n";
-    htmlPage += "<title>Error " + status + "</title>\n";
-    htmlPage += "<style>\n";
-    htmlPage += "body {\n";
-    htmlPage += "    font-family: Arial, sans-serif;\n";
-    htmlPage += "    margin: 0;\n";
-    htmlPage += "    padding: 0;\n";
-    htmlPage += "    background-color: #f2f2f2;\n";
-    htmlPage += "}\n";
-    htmlPage += ".container {\n";
-    htmlPage += "    width: 60%;\n";
-    htmlPage += "    margin: 100px auto;\n";
-    htmlPage += "    padding: 20px;\n";
-    htmlPage += "    background-color: #fff;\n";
-    htmlPage += "    border-radius: 5px;\n";
-    htmlPage += "    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);\n";
-    htmlPage += "}\n";
-    htmlPage += "h1 {\n";
-    htmlPage += "    color: #d8000c;\n";
-    htmlPage += "}\n";
-    htmlPage += "</style>\n";
-    htmlPage += "</head>\n";
-    htmlPage += "<body>\n";
-    htmlPage += "<div class=\"container\">\n";
-    htmlPage += "<h1>Error " + status + "</h1>\n";
-    htmlPage += "</div>\n";
-    htmlPage += "</body>\n";
-    htmlPage += "</html>\n";
-
-    return htmlPage;
+int Response::handle(Client &client)
+{
+    /* 
+        request
+           |
+           |
+           |
+        V     V
+    Error        check if request is valid
+                |
+                |
+                |
+                   V
+                   check if request is GET, POST, DELETE
+                     |
+                     |
+                     |
+                        V
+                        handle request
+                        
+    */
+    return 0;
 }
 
-int Response::send(int socket)
+int Response::is_request_well_formed(Client &client, request_t &request)
+{
+    if (request.headers.find("Transfer-Encoding") != request.headers.end())
+    {
+        if (request.headers["Transfer-Encoding"] != "chunked")
+            return this->send_error(client->get_sock(), 501);
+    }
+    if (request.headers.find("Content-Length") != request.headers.end() && request.headers.find("Transfer-Encoding") != request.headers.end()
+        && request.method == "POST")
+    {
+        return this->send_error(client->get_sock(), 400);
+    }
+    if (this->containsAnyChar(request.path, ALLOWED_URL_CHAR) == true)
+    {
+        return this->send_error(client->get_sock(), 400);
+    }
+    if (request.method != "GET" && request.method != "POST" && request.method != "DELETE")
+    {
+        return this->send_error(client->get_sock(), 501);
+    }
+    if (request.http_version != "HTTP/1.1")
+    {
+        return this->send_error(client->get_sock(), 505);
+    }
+    if (request.path.size() > MAX_URL_SIZE)
+    {
+        return this->send_error(client->get_sock(), 414);
+    }
+    return 0;
+}
+
+int Response::send_error(int socket, int status)
 {
     char *buffer = new char[1024];
+    int sb;
     int status;
 
-    std::string response =  "HTTP/1.1 501 Not Implemented\r\n"
+    std::string response =  "HTTP/1.1 "
+                            + this->httpResponses[status] + "\r\n"
                           "Content-Type: text/html\r\n"
                           "\r\n";
     
-    response += this->custom_error(this->httpResponses[501]);
+    response += this->custom_error(this->httpResponses[status]);
 
     buffer = (char *)response.c_str();
-    ::send(socket, buffer, strlen(buffer), 0);
+    sb = ::send(socket, buffer, strlen(buffer), 0);
+    return sb;
+}
+
+
+int int send(int socket, Client &client, Config &config)
+{
+    int sb = is_request_well_formed(client, client->get_request());
+    if (sb != 0)
+        return -1;
     return 0;
+}
+
+bool Response::containsAnyChar(const std::string& str, const std::string& charSet)
+{
+    for (std::string::size_type i = 0; i < charSet.length(); ++i)
+    {
+        if (str.find(charSet[i]) != std::string::npos)
+        {
+            return true; 
+        }
+    }
+    return false;
 }
 
 
@@ -110,4 +154,38 @@ Response::Response()
     this->fileExtensions.insert(std::make_pair(".py", "Python Script"));
     this->fileExtensions.insert(std::make_pair(".xls", "Microsoft Excel Spreadsheet"));
     this->fileExtensions.insert(std::make_pair(".ppt", "Microsoft PowerPoint Presentation"));
+}
+
+std::string Response::custom_error(const std::string& status) {
+    std::string htmlPage = "<html>\n";
+    htmlPage += "<head>\n";
+    htmlPage += "<title>Error " + status + "</title>\n";
+    htmlPage += "<style>\n";
+    htmlPage += "body {\n";
+    htmlPage += "    font-family: Arial, sans-serif;\n";
+    htmlPage += "    margin: 0;\n";
+    htmlPage += "    padding: 0;\n";
+    htmlPage += "    background-color: #f2f2f2;\n";
+    htmlPage += "}\n";
+    htmlPage += ".container {\n";
+    htmlPage += "    width: 60%;\n";
+    htmlPage += "    margin: 100px auto;\n";
+    htmlPage += "    padding: 20px;\n";
+    htmlPage += "    background-color: #fff;\n";
+    htmlPage += "    border-radius: 5px;\n";
+    htmlPage += "    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);\n";
+    htmlPage += "}\n";
+    htmlPage += "h1 {\n";
+    htmlPage += "    color: #d8000c;\n";
+    htmlPage += "}\n";
+    htmlPage += "</style>\n";
+    htmlPage += "</head>\n";
+    htmlPage += "<body>\n";
+    htmlPage += "<div class=\"container\">\n";
+    htmlPage += "<h1>Error " + status + "</h1>\n";
+    htmlPage += "</div>\n";
+    htmlPage += "</body>\n";
+    htmlPage += "</html>\n";
+
+    return htmlPage;
 }

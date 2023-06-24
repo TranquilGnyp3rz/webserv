@@ -20,6 +20,9 @@
 #include "request.hpp"
 #include "SocketServer.hpp"
 #include "Response.hpp"
+#include "Config_parsing.hpp"
+
+class Response;
 
 class Client {
     private:
@@ -43,5 +46,5 @@ class Client {
         int get_port();
         void set_request(request_t request);
         void save_body(std::string &buffer, int size_buffer);
-        int  respond();
+        int  respond(Clonfig &config);
 };

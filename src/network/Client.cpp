@@ -194,8 +194,8 @@ void Client::save_body(std::string &buffer, int size_buffer) {
     }
 }
     
-int Client::respond()
+int Client::respond(Config &config)
 {
-    this->_response.send(_sock);
+    this->_response.send(_sock, *this, config);
     return 0;
 }
