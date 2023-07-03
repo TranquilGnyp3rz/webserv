@@ -204,6 +204,11 @@ void Client::save_body(std::string &buffer, int &close_conn) {
 
     if(find_key(_request.headers, "Transfer-Encoding") == "chunked")
     {
+        // if (_body != "")
+        // {
+        //     body = _body + body;
+        //     _body = "";
+        // }
         if (_body_lenght != 0) {
             std::cout << "body lenght " << _body_lenght << std::endl;
             std::cout << "body size " << body.size() << std::endl;
@@ -224,7 +229,16 @@ void Client::save_body(std::string &buffer, int &close_conn) {
             // exit(0);
         }
         if (_body_lenght == 0) {
-
+            if (_body != "")
+            {
+                body = _body + body;
+                _body = "";
+            }
+            if (body.find("\r\n") == std::string::npos) {
+                _body = body;
+                body = "";
+            }
+            
             while ( body.find("\r\n") != std::string::npos)
             {
                 int size = 0;
