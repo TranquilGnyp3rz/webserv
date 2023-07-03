@@ -204,19 +204,11 @@ void Client::save_body(std::string &buffer, int &close_conn) {
 
     if(find_key(_request.headers, "Transfer-Encoding") == "chunked")
     {
-        // if (_body != "")
-        // {
-        //     body = _body + body;
-        //     _body = "";
-        // }
         if (_body_lenght != 0) {
-            std::cout << "body lenght " << _body_lenght << std::endl;
-            std::cout << "body size " << body.size() << std::endl;
             if (body.size() < _body_lenght + 2)
             {
                 write_in_file(_body_file, body);
                 _body_lenght -= body.size();
-                // _body.substr(body.size());
             }
             else {
                 write_in_file(_body_file, body.substr(0, _body_lenght));
@@ -224,9 +216,6 @@ void Client::save_body(std::string &buffer, int &close_conn) {
                 _body_lenght = 0;
 
             }
-            std::cout << "body lenght " << _body_lenght << std::endl;
-            std::cout << "body size " << body.size() << std::endl;
-            // exit(0);
         }
         if (_body_lenght == 0) {
             if (_body != "")
@@ -238,7 +227,6 @@ void Client::save_body(std::string &buffer, int &close_conn) {
                 _body = body;
                 body = "";
             }
-            
             while ( body.find("\r\n") != std::string::npos)
             {
                 int size = 0;
@@ -273,26 +261,18 @@ void Client::save_body(std::string &buffer, int &close_conn) {
                 _body_lenght = 0;
             }
         }
-            
-        
-       
     }
     else if (find_key(_request.headers, "Content-Length") != "")
     {
-        // exit(0);
         int size = std::stoi(find_key(_request.headers, "Content-Length"));
         if (_body_lenght  < size) {
-            std::cout << "-------" << body << std::endl;
             write_in_file(_body_file, body.substr(0, size - _body_lenght));
             std::ifstream in_file(_body_file, std::ios::binary);
             in_file.seekg(0, std::ios::end);
             int file_size = in_file.tellg();
             _body_lenght = file_size;
-            // std::cout << _body_lenght  << "--------"<< size<< std::endl;
-            // std::cout << _body_file << std::endl;
         }
         if (_body_lenght == size) {
-            // read_from_file(_request.body_file);
             close_conn = true;
         }
     }
@@ -303,7 +283,6 @@ void Client::save_body(std::string &buffer, int &close_conn) {
         }
         
     }
-    std::cout << "close conne ction: " << close_conn << std::endl;
 }
     
 int Client::respond()
