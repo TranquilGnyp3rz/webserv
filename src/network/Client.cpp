@@ -103,6 +103,9 @@ static request_t split_lines(const std::string &str) {
             request.method = vectors.at(0);
             request.path = vectors.at(1);
             request.http_version = vectors.at(2);
+            //remove \r from http version
+            request.http_version.erase(request.http_version.size() - 1);
+            
             continue;
         }
         //if there is only \r\n
@@ -112,8 +115,11 @@ static request_t split_lines(const std::string &str) {
             request.body_file = generate_filename();
             break ;
         }
+
         else if (request.headerdone == false)
         {
+            // erase /r from line
+            line.erase(line.size() - 1);
             vectors = split_words(line, ':');
             vectors.at(0) = trim(vectors.at(0));
             vectors.at(1) = trim(vectors.at(1));
@@ -189,57 +195,46 @@ void Client::set_sock(int sock) {
 void Client::parse_request() {
     _request = split_lines(_buffer);
 }
+// check if hexadicimal number
 
 
 void Client::save_body(std::string &buffer, int &close_conn) {
 
-    // std::string::size_type pos = _buffer.find("\r\n\r\n");
-    // std::cout << buffer << std::endl;
-    // std::cout << "body: " << body << std::endl;
-
     std::string body(buffer);
-    // std::cout << "-----------" << std::endl;
-    // std::cout << "body: " << body << std::endl;
-    // std::cout << _body_file << std::endl;
-    // std::cout << "-----------" << std::endl;
-    // std::cout <<  close_conn << std::endl;
-    // std::cout << "-----------" << std::endl;
+
     if(find_key(_request.headers, "Transfer-Encoding") == "chunked")
     {
         if (_body_lenght != 0) {
+            std::cout << "body lenght " << _body_lenght << std::endl;
+            std::cout << "body size " << body.size() << std::endl;
             if (body.size() < _body_lenght + 2)
             {
                 write_in_file(_body_file, body);
                 _body_lenght -= body.size();
+                // _body.substr(body.size());
             }
             else {
                 write_in_file(_body_file, body.substr(0, _body_lenght));
                 body = body.substr(_body_lenght + 2);
                 _body_lenght = 0;
-                // close_conn = 1;
-            }
-        }
 
-            while (body.find("\r\n") != std::string::npos)
+            }
+            std::cout << "body lenght " << _body_lenght << std::endl;
+            std::cout << "body size " << body.size() << std::endl;
+            // exit(0);
+        }
+        if (_body_lenght == 0) {
+
+            while ( body.find("\r\n") != std::string::npos)
             {
-                
                 int size = 0;
-                
-                // while (body[size] != body.find("\r\n"))
-                // {
-                //     std::cout << "body[size]: " << body[size] << std::endl;
-                //     size++;
-                // }
                     
                 std::string::size_type pos = body.find("\r\n");
                 std::string size_str = body.substr(0, pos);
-                std::cout << "pos" << pos << std::endl;
-                
-                // std::cout << "size_str: " << size_str << std::endl;
                 try {
-                    std::cout << "size_str: " << body << std::endl;
+                    std::cout << "size_str: " << size_str << std::endl;
+        
                     _body_lenght = std::stoi(size_str, 0, 16);
-                    std::cout << "----------lebnght" << _body_lenght << std::endl;
                 }
                 catch (std::exception &e) {
                     std::cout << "error stoi" << std::endl;
@@ -247,11 +242,8 @@ void Client::save_body(std::string &buffer, int &close_conn) {
                     close_conn = true;
                     break;
                 }
-                // _body_lenght = std::stoi(size_str, 0, 16);
-                // std::cout << "----------lebnght" << _body_lenght << std::endl;
                 if(_body_lenght == 0)
                 {
-                    // read_from_file(_body_file);
                     close_conn = true;
                     break;
                 }
@@ -264,12 +256,10 @@ void Client::save_body(std::string &buffer, int &close_conn) {
                 }
                 write_in_file(_body_file, body.substr(0, _body_lenght));
                 body = body.substr(_body_lenght + 2);
-                // if (body.find("\r\n") == std::string::npos)
-                // {
-                //     _body
-                // }
                 _body_lenght = 0;
             }
+        }
+            
         
        
     }

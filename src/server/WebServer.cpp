@@ -153,7 +153,7 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response
     int close_conn = false;
     // std::cout << "close conne first" << close_conn << std::endl;
     int rc, len;
-    char buffer[10];
+    char buffer[65536];
     // while (true)
     // {
         rc = recv(i, buffer, sizeof(buffer), 0);
@@ -241,15 +241,17 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response
             // }
             _clients.find(i)->second.save_body( body, close_conn);
             // std::cout << "method = " << _clients.find(i)->second.get_request().method << std::endl;
+
             // std::cout << "path = " << _clients.find(i)->second.get_request().path << std::endl;
             // std::cout << "http_version = " << _clients.find(i)->second.get_request().http_version << std::endl;
-            std::map<std::string, std::string>::const_iterator iter;
-            const std::map<std::string, std::string> &headers = _clients.find(i)->second.get_request().headers;
-            // close_conn = true;
-            for (iter = headers.begin(); iter != headers.end(); ++iter)
-            {
-                std::cout << iter->first << " : " << iter->second << std::endl;
-            }
+
+            // std::map<std::string, std::string>::const_iterator iter;
+            // const std::map<std::string, std::string> &headers = _clients.find(i)->second.get_request().headers;
+            // // close_conn = true;
+            // for (iter = headers.begin(); iter != headers.end(); ++iter)
+            // {
+            //     std::cout << iter->first << " : " << iter->second << std::endl;
+            // }
             
             
         }
