@@ -9,11 +9,28 @@
 /*   Updated: 2023/06/09 12:44:59 by akhouya          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
+#include<iostream>
+#include<fstream>
 #include "../../inc/Client.hpp"
 #include <fstream>
+void read_from_file(const std::string filename)
+{
+    std::cout << "read from file" << std::endl;
+    std::ifstream file(filename); 
+    if (file.is_open()) {
+        std::string line;
+        while (std::getline(file, line)) {
+            // Process each line from the file
+            std::cout << line << std::endl;
+        }
+        
+        file.close();
+    } else {
+        std::cout << "Unable to open the file." << std::endl;
+    }
+}
 std::string generate_filename() {
-    std::string filename = "/tmp/";
+    std::string filename = "/goinfre/akhouya/muchowebs/";
     std::string charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
     for (int i = 0; i < 10; i++)
     {
@@ -25,9 +42,16 @@ std::string generate_filename() {
 // write in randome file
 void write_in_file(std::string filename, std::string buffer) {
     std::ofstream file;
+    //append to file
     file.open(filename, std::ios::out | std::ios::app);
     file << buffer;
     file.close();
+    // exit(0);
+
+
+    // file.open(filename, std::ios::out | std::ios::app);
+    // file << buffer;
+    // file.close();
 }
 std::string trim(const std::string& str) 
 {  
@@ -79,6 +103,9 @@ static request_t split_lines(const std::string &str) {
             request.method = vectors.at(0);
             request.path = vectors.at(1);
             request.http_version = vectors.at(2);
+            //remove \r from http version
+            request.http_version.erase(request.http_version.size() - 1);
+            
             continue;
         }
         //if there is only \r\n
@@ -88,7 +115,11 @@ static request_t split_lines(const std::string &str) {
             request.body_file = generate_filename();
             break ;
         }
-        else if (request.headerdone == false){
+
+        else if (request.headerdone == false)
+        {
+            // erase /r from line
+            line.erase(line.size() - 1);
             vectors = split_words(line, ':');
             vectors.at(0) = trim(vectors.at(0));
             vectors.at(1) = trim(vectors.at(1));
@@ -123,11 +154,16 @@ static request_t split_lines(const std::string &str) {
 
 Client::Client(int sock) {
     _sock = sock;
+    _body_file.assign("ss");
 }
 Client::Client(int port, int sock) {
-    _request.lenght_body = 0;
+    _body_lenght = 0;
     _port = port;
     _sock = sock;
+    _buffer = "";
+    _body = "";
+    //assign number socket
+    _body_file.assign(std::to_string(sock));
 }
 
 request_t Client::get_request() {
@@ -159,38 +195,93 @@ void Client::set_sock(int sock) {
 void Client::parse_request() {
     _request = split_lines(_buffer);
 }
+// check if hexadicimal number
 
 
-void Client::save_body(std::string &buffer, int size_buffer) {
-    (void)size_buffer;
-    std::string::size_type pos = buffer.find("\r\n\r\n");
-    
-    std::string body = buffer.substr(pos + 4);
-    
-    if(find_key(_request.headers, "Content-Type") == "chunked")
+void Client::save_body(std::string &buffer, int &close_conn) {
+
+    std::string body(buffer);
+
+    if(find_key(_request.headers, "Transfer-Encoding") == "chunked")
     {
-        while (body.find("\r\n") != std::string::npos)
-        {
-            int size = 0;
-            std::string::size_type pos = body.find("\r\n");
-            std::string size_str = body.substr(0, pos);
-            size = std::stoi(size_str, 0, 16);
-            body = body.substr(pos + 2);
-            if (size == 0)
-                break;
-            write_in_file(_request.body_file, body.substr(0, size));
-            body = body.substr(size + 2);
+        if (_body_lenght != 0) {
+            if (body.size() < _body_lenght + 2)
+            {
+                write_in_file(_body_file, body);
+                _body_lenght -= body.size();
+            }
+            else {
+                write_in_file(_body_file, body.substr(0, _body_lenght));
+                body = body.substr(_body_lenght + 2);
+                _body_lenght = 0;
+
+            }
+        }
+        if (_body_lenght == 0) {
+            if (_body != "")
+            {
+                body = _body + body;
+                _body = "";
+            }
+            if (body.find("\r\n") == std::string::npos) {
+                _body = body;
+                body = "";
+            }
+            while ( body.find("\r\n") != std::string::npos)
+            {
+                int size = 0;
+                    
+                std::string::size_type pos = body.find("\r\n");
+                std::string size_str = body.substr(0, pos);
+                try {
+                    std::cout << "size_str: " << size_str << std::endl;
+        
+                    _body_lenght = std::stoi(size_str, 0, 16);
+                }
+                catch (std::exception &e) {
+                    std::cout << "error stoi" << std::endl;
+                    std::cout << e.what() << std::endl;
+                    close_conn = true;
+                    break;
+                }
+                if(_body_lenght == 0)
+                {
+                    close_conn = true;
+                    break;
+                }
+                body = body.substr(pos + 2);
+                if (body.size() < _body_lenght + 2)
+                {
+                    write_in_file(_body_file, body);
+                    _body_lenght -= body.size();
+                    break;
+                }
+                write_in_file(_body_file, body.substr(0, _body_lenght));
+                body = body.substr(_body_lenght + 2);
+                _body_lenght = 0;
+            }
         }
     }
-    else
+    else if (find_key(_request.headers, "Content-Length") != "")
     {
         int size = std::stoi(find_key(_request.headers, "Content-Length"));
-        if (_request.lenght_body < size) {
-                
-        
-        write_in_file(_request.body_file, body.substr(0, size - _request.lenght_body));
-        _request.lenght_body += size - _request.lenght_body;
+        if (_body_lenght  < size) {
+            write_in_file(_body_file, body.substr(0, size - _body_lenght));
+            std::ifstream in_file(_body_file, std::ios::binary);
+            in_file.seekg(0, std::ios::end);
+            int file_size = in_file.tellg();
+            _body_lenght = file_size;
         }
+        if (_body_lenght == size) {
+            close_conn = true;
+        }
+    }
+    else {
+        close_conn = true;
+        if (_request.method == "POST" || _request.method == "PUT") {
+            _bad_request = true;
+        }
+        
     }
 }
     

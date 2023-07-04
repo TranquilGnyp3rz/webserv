@@ -106,9 +106,11 @@ bool ResourceHandler::location_match(std::string location, std::string path)
     for (int i = 0; i < location.length(); i++)
     {
         if (location[i] != path[i])
-            return false;
+            break ;
     }
-    return true;
+    if (path[location.length()] == '/' || path[location.length()] == std::string:end)
+        return true;
+    return false;
 }
 
 int ResourceHandler::get_file(Server const &server, Location const &location)
