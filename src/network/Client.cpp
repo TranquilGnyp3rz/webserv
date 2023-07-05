@@ -154,7 +154,7 @@ void Client::parse_request() {
 void Client::save_body(std::string &buffer, int &close_conn) {
 
     std::string body(buffer);
-    else if (find_key(_request.headers, "Content-Length") != "")
+    if (find_key(_request.headers, "Content-Length") != "")
         {
             int size = std::stoi(find_key(_request.headers, "Content-Length"));
             if (_request.body_lenght  < size) {
@@ -168,7 +168,7 @@ void Client::save_body(std::string &buffer, int &close_conn) {
                 close_conn = true;
             }
         }
-    if(find_key(_request.headers, "Transfer-Encoding") == "chunked")
+    else if(find_key(_request.headers, "Transfer-Encoding") == "chunked")
     {
         if (_request.body_lenght != 0) {
             if (body.size() < _request.body_lenght + 2)
@@ -228,8 +228,7 @@ void Client::save_body(std::string &buffer, int &close_conn) {
             }
         }
     }
-    
-    else {
+    else
         close_conn = true;
 }
     

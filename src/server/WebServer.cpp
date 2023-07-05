@@ -83,7 +83,7 @@ void WebServer::accepter(std::vector<SocketServer> sockets, fd_set *master_set, 
     {
 
         memcpy(&working_set, master_set, sizeof(*master_set));
-        std::cout << "Waiting on select()..." << std::endl;
+        // std::cout << "Waiting on select()..." << std::endl;
         if (select_socket(&working_set, *max_sd, &rc, &response_set) == -1)
             break;
         desc_ready = rc;
@@ -119,7 +119,7 @@ void WebServer::accepter(std::vector<SocketServer> sockets, fd_set *master_set, 
 void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response_set)
 {
 
-    std::cout << "Discriptor " << i << "is readale" << std::endl;
+    // std::cout << "Discriptor " << i << "is readale" << std::endl;
 
     int close_conn = false;
     int rc;
@@ -140,7 +140,7 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response
         std::cout << "Connection closed" << std::endl;
         close_conn = true;
     }
-    std::cout << "  " << rc << " bytes received" << std::endl;
+    // std::cout << "  " << rc << " bytes received" << std::endl;
      std::string body;
     std::string buf(buffer, rc);
     std::string::size_type pos;
