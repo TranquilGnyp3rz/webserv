@@ -154,7 +154,20 @@ void Client::parse_request() {
 void Client::save_body(std::string &buffer, int &close_conn) {
 
     std::string body(buffer);
-
+    else if (find_key(_request.headers, "Content-Length") != "")
+        {
+            int size = std::stoi(find_key(_request.headers, "Content-Length"));
+            if (_request.body_lenght  < size) {
+                write_in_file(_request.body_file, body.substr(0, size - _request.body_lenght));
+                std::ifstream in_file(_request.body_file, std::ios::binary);
+                in_file.seekg(0, std::ios::end);
+                int file_size = in_file.tellg();
+                _request.body_lenght = file_size;
+            }
+            if (_request.body_lenght == size) {
+                close_conn = true;
+            }
+        }
     if(find_key(_request.headers, "Transfer-Encoding") == "chunked")
     {
         if (_request.body_lenght != 0) {
@@ -187,7 +200,7 @@ void Client::save_body(std::string &buffer, int &close_conn) {
                 std::string::size_type pos = body.find("\r\n");
                 std::string size_str = body.substr(0, pos);
                 try {
-                    std::cout << "size_str: " << size_str << std::endl;
+                    // std::cout << "size_str: " << size_str << std::endl;
         
                     _request.body_lenght = std::stoi(size_str, 0, 16);
                 }
@@ -215,27 +228,9 @@ void Client::save_body(std::string &buffer, int &close_conn) {
             }
         }
     }
-    else if (find_key(_request.headers, "Content-Length") != "")
-    {
-        int size = std::stoi(find_key(_request.headers, "Content-Length"));
-        if (_request.body_lenght  < size) {
-            write_in_file(_request.body_file, body.substr(0, size - _request.body_lenght));
-            std::ifstream in_file(_request.body_file, std::ios::binary);
-            in_file.seekg(0, std::ios::end);
-            int file_size = in_file.tellg();
-            _request.body_lenght = file_size;
-        }
-        if (_request.body_lenght == size) {
-            close_conn = true;
-        }
-    }
+    
     else {
         close_conn = true;
-        if (_request.method == "POST" || _request.method == "PUT") {
-            _bad_request = true;
-        }
-        
-    }
 }
     
 int Client::respond()
