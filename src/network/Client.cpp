@@ -152,18 +152,10 @@ static request_t split_lines(const std::string &str) {
     return request;
 }
 
-Client::Client(int sock) {
+Client::Client(Config &config, int sock) {
     _sock = sock;
+    _config = config;
     _body_file.assign("ss");
-}
-Client::Client(int port, int sock) {
-    _body_lenght = 0;
-    _port = port;
-    _sock = sock;
-    _buffer = "";
-    _body = "";
-    //assign number socket
-    _body_file.assign(std::to_string(sock));
 }
 
 request_t Client::get_request() {

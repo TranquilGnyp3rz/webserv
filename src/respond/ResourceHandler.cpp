@@ -115,15 +115,30 @@ bool ResourceHandler::location_match(std::string location, std::string path)
 
 int ResourceHandler::get_file(Server const &server, Location const &location)
 {
+    std::string file_path;
+    std::string requested_file = _client.get_request().path[location.get_locationName().length()];
 
-   
-    return 0;
+    if (location.get_root() == "")
+        file_path = server.get_root() + requested_file;
+    else
+        file_path = location.get_root() + requested_file;
+
+    int fd = open(file_path.c_str(), O_RDONLY);
+    if (fd == -1)
+        return costum_error_page(404);
+    return fd;
 }
 
-int ResourceHandler::delete_file(Server const &server, Location const &location)
+bool ResourceHandler::delete_file(Server const &server, Location const &location)
 {
- 
-    return 0;
+    std::string file_path;
+    std::string requested_file = _client.get_request().path[location.get_locationName().length()];
+    if (location.get_root() == "")
+        file_path = server.get_root() + requested_file;
+    else
+        file_path = location.get_root() + requested_file;
+    
+    return true;
 }
 
 int ResourceHandler::post_file(Server const &server, Location const &location)

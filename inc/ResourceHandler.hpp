@@ -29,7 +29,7 @@ class ResourceHandler
         int handle_location(Server &server, std::vector<Location> &locations);
         int handle_method(Server &server, Location &locations);
         int get_file(Server const &server, Location const &location);
-        int delete_file(Server const &server, Location const &location);
+        bool delete_file(Server const &server, Location const &location);
         int post_file(Server const &server, Location const &location);
 };
 

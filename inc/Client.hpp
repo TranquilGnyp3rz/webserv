@@ -19,14 +19,16 @@
 #include <sstream>
 #include "request.hpp"
 #include "SocketServer.hpp"
-#include "Response.hpp"
+#include "ResourceHandler.hpp"
 #include "Config_parsing.hpp"
 
 class Response;
 
 class Client {
     private:
-        Response   _response;
+        ResourceHandler  _resourceHandler;
+        Config &_config;
+        int fd;
         request_t _request;
         std::string _buffer;
         bool _bad_request;
@@ -37,41 +39,40 @@ class Client {
         int _body_lenght;
         std::string _body;
     public:
-        Client(int sock);
-        Client(int port, int sock);
-        // void split_lines(const std::string &str);
-        // void split_words(const std::string &str);
+        Client(Config &config, int sock);
         void parse_request();
-        std::string get_buffer();
-        void set_buffer(std::string buffer);
-        int get_sock();
-        void set_sock(int sock);
-        request_t get_request();
-        //get port
-        int get_port();
-        void set_request(request_t request);
         void save_body(std::string &buffer, int &close_conn);
-        int  respond();
-        void set_bad_request(bool bad_request) {
-            _bad_request = bad_request;
-        }
+ 
+        /* Getters */
+        int get_sock();
+        int get_port();
+        request_t get_request();
+        std::string get_buffer();
         bool get_bad_request(){
             return _bad_request;
         }
         bool get_first_body() {
             return _first_body;
         }
-        void set_first_body(bool first_body) {
-            _first_body = first_body;
-        }
-        void set_body_file(std::string body_file) {
-            _body_file = body_file;
-        }
         std::string get_body_file() {
             return _body_file;
         }
         std::string get_body() {
             return _body;
+        }
+
+        /* Setters */
+        void set_sock(int sock);
+        void set_request(request_t request);
+        void set_buffer(std::string buffer);
+        void set_bad_request(bool bad_request) {
+            _bad_request = bad_request;
+        }
+        void set_first_body(bool first_body) {
+            _first_body = first_body;
+        }
+        void set_body_file(std::string body_file) {
+            _body_file = body_file;
         }
         void set_body(std::string body) {
             _body = body;

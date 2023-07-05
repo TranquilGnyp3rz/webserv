@@ -12,22 +12,6 @@
 
 #include "WebServer.hpp"
 
-// void read_from_file(const std::string filename)
-// {
-//     std::cout << "read from file" << std::endl;
-//     std::ifstream file(filename); 
-//     if (file.is_open()) {
-//         std::string line;
-//         while (std::getline(file, line)) {
-//             // Process each line from the file
-//             std::cout << line << std::endl;
-//         }
-        
-//         file.close();
-//     } else {
-//         std::cout << "Unable to open the file." << std::endl;
-//     }
-// }
 WebServer::WebServer(std::string config_file)
 {
     _config.Handle_configFile(config_file);
@@ -39,31 +23,16 @@ WebServer::WebServer(std::string config_file)
     }
 }
 
-WebServer::WebServer(WebServer const & src)
-{
-    *this = src;
-}
-
-WebServer::~WebServer()
-{
-
-}
-
-WebServer & WebServer::operator=(WebServer const & src)
-{
-    return *this;
-}
-
 void WebServer::run()
 {
     fd_set master_set;
     int max_sd, i;
     std::vector<SocketServer> sockets;
     FD_ZERO(&master_set);
+
     for (i =0 ; i < _ports.size(); i++)
     {
         sockets.push_back(SocketServer(AF_INET6, SOCK_STREAM, 0, _ports[i], INADDR_ANY));
-        std::cout << "socket = " << sockets[i].get_sock() << std::endl;
         max_sd = sockets[i].get_sock();
         FD_SET(sockets[i].get_sock(), &master_set);
     }
@@ -74,19 +43,8 @@ void WebServer::run()
             close(i);
     }
 }
-int find_sockets(std::vector<SocketServer> sockets, int sock)
-{
-    std::vector<SocketServer>::iterator it;
-    for (it = sockets.begin(); it != sockets.end(); it++)
-    {
-        if (it->get_sock() == sock){
-             return it->get_port();
-        }
-           
-    }
-    return 1;
-}
-void WebServer::accepter(std::vector<SocketServer> sockets, fd_set *master_set, int *max_sd)
+
+void WebServer::accepter(std::vector<SocketServer> &sockets, fd_set *master_set, int *max_sd)
 {
     int new_sd, rc, i;
     int desc_ready, end_Webserver = false;
@@ -98,7 +56,6 @@ void WebServer::accepter(std::vector<SocketServer> sockets, fd_set *master_set, 
     {
 
         memcpy(&working_set, master_set, sizeof(*master_set));
-        std::cout << "Waiting on select()..." << std::endl;
         if (select_socket(&working_set, *max_sd, &rc, &response_set) == -1)
             break;
         desc_ready = rc;
@@ -119,7 +76,7 @@ void WebServer::accepter(std::vector<SocketServer> sockets, fd_set *master_set, 
             {
                 std::cout << "Discriptor " << i << "is writeable" << std::endl;
                 // write and html msg to broweser in the socket
-                responder(_clients.find(i)->second);
+                // response 
                 // close the socket
                 if (true) {
                     // remove(_clients.find(i)->second.get_body_file().c_str());
@@ -132,6 +89,20 @@ void WebServer::accepter(std::vector<SocketServer> sockets, fd_set *master_set, 
         }
     }
 }
+
+int find_sockets(std::vector<SocketServer> sockets, int sock)
+{
+    std::vector<SocketServer>::iterator it;
+    for (it = sockets.begin(); it != sockets.end(); it++)
+    {
+        if (it->get_sock() == sock){
+             return it->get_port();
+        }
+           
+    }
+    return 1;
+}
+
 
 void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response_set)
 {

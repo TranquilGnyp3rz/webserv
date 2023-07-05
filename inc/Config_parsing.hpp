@@ -23,6 +23,7 @@ class Config{
     public :
         Config();
         ~Config();
+        Config& operator=(const Config& other);
         void Handle_configFile(std::string filepath);
         void Check_configFile();                                     // check if the config file is valid
         void Parse_ConfigFile();                                     // parse the config file

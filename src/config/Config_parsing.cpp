@@ -9,6 +9,17 @@ Config::~Config()
 {
 
 }
+
+Config& Config::operator=(Config const &config)
+{
+    if (this != &config)
+    {
+        this->_filePath = config._filePath;
+        this->_servers = config._servers;
+    }
+    return *this;
+}
+
 void Config::Handle_configFile(std::string filepath)
 {
     this->_filePath = filepath;
