@@ -258,7 +258,7 @@ int WebServer::accept_socket(fd_set *working_set, int i, int *max_sd, int *new_s
         std::cout << "  New incoming connection - " << *new_sd << std::endl;
         clients.insert(std::make_pair(*new_sd, Client(ports, *new_sd)));
 
-        std::cout << clients.find(*new_sd)->second.get_body_file() << std::endl;
+        // std::cout << clients.find(*new_sd)->second.get_body_file() << std::endl;
         // std::cout << "body lenght " << clients.find(*new_sd)->second.get_request().lenght_body<< std::endl;
         FD_SET(*new_sd, master_set);
         if (*new_sd > *max_sd)

@@ -23,21 +23,15 @@
 
 class Client {
     private:
-        Response   _response;
-        request_t _request;
+        Response    _response;
+        request_t   _request;
         std::string _buffer;
-        bool _bad_request;
-        int _port;
-        int _sock;
-        bool _first_body;
-        std::string _body_file;
-        int _body_lenght;
-        std::string _body;
+        bool        _bad_request;
+        int         _port;
+        int         _sock;
     public:
         Client(int sock);
         Client(int port, int sock);
-        // void split_lines(const std::string &str);
-        // void split_words(const std::string &str);
         void parse_request();
         std::string get_buffer();
         void set_buffer(std::string buffer);
@@ -56,21 +50,9 @@ class Client {
             return _bad_request;
         }
         bool get_first_body() {
-            return _first_body;
+            return _request.first_body;
         }
         void set_first_body(bool first_body) {
-            _first_body = first_body;
-        }
-        void set_body_file(std::string body_file) {
-            _body_file = body_file;
-        }
-        std::string get_body_file() {
-            return _body_file;
-        }
-        std::string get_body() {
-            return _body;
-        }
-        void set_body(std::string body) {
-            _body = body;
+            _request.first_body = first_body;
         }
 };

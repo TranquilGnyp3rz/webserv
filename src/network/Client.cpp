@@ -30,7 +30,7 @@ void read_from_file(const std::string filename)
     }
 }
 std::string generate_filename() {
-    std::string filename = "/goinfre/akhouya/muchowebs/";
+    std::string filename = "/tmp/";
     std::string charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
     for (int i = 0; i < 10; i++)
     {
@@ -86,84 +86,18 @@ static std::string find_key(std::map<std::string, std::string> map, std::string 
     return "";
 }
 
-
-static request_t split_lines(const std::string &str) {
-    std::vector<std::string>  vectors;
-    std::istringstream iss(str);
-    std::string line;
-    request_t request;
-    bool firstline = false;
-    request.headerdone = false;
-    //check it there \r\n
-    while (std::getline(iss, line, '\n') && request.headerdone == false)
-    {
-        if (firstline == false) {
-            firstline = true;
-            vectors = (split_words(line, ' '));
-            request.method = vectors.at(0);
-            request.path = vectors.at(1);
-            request.http_version = vectors.at(2);
-            //remove \r from http version
-            request.http_version.erase(request.http_version.size() - 1);
-            
-            continue;
-        }
-        //if there is only \r\n
-        if (line == "\r")
-        {
-            request.headerdone = true;
-            request.body_file = generate_filename();
-            break ;
-        }
-
-        else if (request.headerdone == false)
-        {
-            // erase /r from line
-            line.erase(line.size() - 1);
-            vectors = split_words(line, ':');
-            vectors.at(0) = trim(vectors.at(0));
-            vectors.at(1) = trim(vectors.at(1));
-            request.headers.insert(std::pair<std::string, std::string>((vectors.at(0)), vectors.at(1)));
-        }
-
-       
-
-        
-    }
-    // if (headerdone == true)
-    // {
-    //     std::getline(iss, line, '');
-    //     if ( find_key(request.headers, "transfer-encoding") == "chunked")
-    // {
-    //     // request.body_file = line;
-    // }
-        
-    // else
-    // {
-    //     int size = std::stoi(find_key(request.headers, "content-length"));
-    //     if (size < request.body_file.size()) {
-    //         request.body_file += line.substr(0, size - request.body_file.size());
-    //     }
-            
-    //     // request.body_file += line;
-    // }
-    // }
-     
-    return request;
-}
-
 Client::Client(int sock) {
     _sock = sock;
-    _body_file.assign("ss");
+    // _body_file.assign("ss");
 }
 Client::Client(int port, int sock) {
-    _body_lenght = 0;
+    _request.body_lenght = 0;
+    _request.body = "";
+    _request.first_body = false;
     _port = port;
     _sock = sock;
     _buffer = "";
-    _body = "";
-    //assign number socket
-    _body_file.assign(std::to_string(sock));
+    _request.body_file = generate_filename();
 }
 
 request_t Client::get_request() {
@@ -193,7 +127,37 @@ void Client::set_sock(int sock) {
 }
 
 void Client::parse_request() {
-    _request = split_lines(_buffer);
+    std::vector<std::string> vectors;
+    std::istringstream iss(_buffer);
+    std::string line;
+    bool firstline = false;
+    _request.headerdone = false;
+    while (std::getline(iss, line, '\n') && _request.headerdone == false)
+    {
+        if (firstline == false) {
+            firstline = true;
+            vectors = (split_words(line, ' '));
+            _request.method = vectors.at(0);
+            _request.path = vectors.at(1);
+            _request.http_version = vectors.at(2);
+            _request.http_version.erase(_request.http_version.size() - 1);
+            continue;
+        }
+        if (line == "\r")
+        {
+            _request.headerdone = true;
+            break ;
+        }
+
+        else if (_request.headerdone == false)
+        {
+            line.erase(line.size() - 1);
+            vectors = split_words(line, ':');
+            vectors.at(0) = trim(vectors.at(0));
+            vectors.at(1) = trim(vectors.at(1));
+            _request.headers.insert(std::pair<std::string, std::string>((vectors.at(0)), vectors.at(1)));
+        }
+    }
 }
 // check if hexadicimal number
 
@@ -204,27 +168,27 @@ void Client::save_body(std::string &buffer, int &close_conn) {
 
     if(find_key(_request.headers, "Transfer-Encoding") == "chunked")
     {
-        if (_body_lenght != 0) {
-            if (body.size() < _body_lenght + 2)
+        if (_request.body_lenght != 0) {
+            if (body.size() < _request.body_lenght + 2)
             {
-                write_in_file(_body_file, body);
-                _body_lenght -= body.size();
+                write_in_file(_request.body_file, body);
+                _request.body_lenght -= body.size();
             }
             else {
-                write_in_file(_body_file, body.substr(0, _body_lenght));
-                body = body.substr(_body_lenght + 2);
-                _body_lenght = 0;
+                write_in_file(_request.body_file, body.substr(0, _request.body_lenght));
+                body = body.substr(_request.body_lenght + 2);
+                _request.body_lenght = 0;
 
             }
         }
-        if (_body_lenght == 0) {
-            if (_body != "")
+        if (_request.body_lenght == 0) {
+            if (_request.body != "")
             {
-                body = _body + body;
-                _body = "";
+                body = _request.body + body;
+                _request.body = "";
             }
             if (body.find("\r\n") == std::string::npos) {
-                _body = body;
+                _request.body = body;
                 body = "";
             }
             while ( body.find("\r\n") != std::string::npos)
@@ -236,7 +200,7 @@ void Client::save_body(std::string &buffer, int &close_conn) {
                 try {
                     std::cout << "size_str: " << size_str << std::endl;
         
-                    _body_lenght = std::stoi(size_str, 0, 16);
+                    _request.body_lenght = std::stoi(size_str, 0, 16);
                 }
                 catch (std::exception &e) {
                     std::cout << "error stoi" << std::endl;
@@ -244,35 +208,35 @@ void Client::save_body(std::string &buffer, int &close_conn) {
                     close_conn = true;
                     break;
                 }
-                if(_body_lenght == 0)
+                if(_request.body_lenght == 0)
                 {
                     close_conn = true;
                     break;
                 }
                 body = body.substr(pos + 2);
-                if (body.size() < _body_lenght + 2)
+                if (body.size() < _request.body_lenght + 2)
                 {
-                    write_in_file(_body_file, body);
-                    _body_lenght -= body.size();
+                    write_in_file(_request.body_file, body);
+                    _request.body_lenght -= body.size();
                     break;
                 }
-                write_in_file(_body_file, body.substr(0, _body_lenght));
-                body = body.substr(_body_lenght + 2);
-                _body_lenght = 0;
+                write_in_file(_request.body_file, body.substr(0, _request.body_lenght));
+                body = body.substr(_request.body_lenght + 2);
+                _request.body_lenght = 0;
             }
         }
     }
     else if (find_key(_request.headers, "Content-Length") != "")
     {
         int size = std::stoi(find_key(_request.headers, "Content-Length"));
-        if (_body_lenght  < size) {
-            write_in_file(_body_file, body.substr(0, size - _body_lenght));
-            std::ifstream in_file(_body_file, std::ios::binary);
+        if (_request.body_lenght  < size) {
+            write_in_file(_request.body_file, body.substr(0, size - _request.body_lenght));
+            std::ifstream in_file(_request.body_file, std::ios::binary);
             in_file.seekg(0, std::ios::end);
             int file_size = in_file.tellg();
-            _body_lenght = file_size;
+            _request.body_lenght = file_size;
         }
-        if (_body_lenght == size) {
+        if (_request.body_lenght == size) {
             close_conn = true;
         }
     }
