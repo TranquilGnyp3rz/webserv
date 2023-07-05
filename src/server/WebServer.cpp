@@ -1,4 +1,4 @@
-r/* ************************************************************************** */
+/* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
 /*   WebServer.cpp                                      :+:      :+:    :+:   */
@@ -11,6 +11,7 @@ r/* ************************************************************************** *
 /* ************************************************************************** */
 
 #include "WebServer.hpp"
+#include "ResourceHandler.hpp"
 
 WebServer::WebServer(std::string config_file)
 {
@@ -76,8 +77,7 @@ void WebServer::accepter(std::vector<SocketServer> &sockets, fd_set *master_set,
             if (FD_ISSET(i , &response_set))
             {
                 std::cout << "Discriptor " << i << "is writeable" << std::endl;
-                responder(_clients.find(i)->second);
-                if (true) {
+                if (_clients.find(i)->second.response()) {
                     // remove(_clients.find(i)->second.get_body_file().c_str());
                     std::cout << "close socket " << i << std::endl;
                     FD_CLR(i, &response_set);
@@ -132,7 +132,7 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response
     std::string buf(buffer, rc);
     std::string::size_type pos;
 
-    _clients.find(i)->second.set_buffer(_clients.find(i)->second.get_buffer() + buf);
+    // _clients.find(i)->second.set_buffer(_clients.find(i)->second.get_buffer() + buf);
 
     pos = _clients.find(i)->second.get_buffer().find("\r\n\r\n");
     if (pos != std::string::npos)
@@ -164,11 +164,6 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response
     }
 }
 
-int WebServer::responder(Client &client)
-{
-    client.respond();
-    return 0;
-}
 
 
 int WebServer::select_socket(fd_set *working_set, int max_sd, int *rc, fd_set *response_set)
@@ -205,7 +200,8 @@ int WebServer::accept_socket(fd_set *working_set, int i, int *max_sd, int *new_s
     else
     {
         std::cout << "  New incoming connection - " << *new_sd << std::endl;
-        clients.insert(std::make_pair(*new_sd, Client(ports, *new_sd)));
+        // ResourceHandler resource_handler(this->_config, );
+        clients.insert(std::make_pair(*new_sd, Client(this->_config, ports, *new_sd)));
         FD_SET(*new_sd, master_set);
         if (*new_sd > *max_sd)
             *max_sd = *new_sd;
@@ -235,5 +231,3 @@ int WebServer::find_client(std::vector<Client> _clients, int sock)
     }
     return 0;
 }
-
-

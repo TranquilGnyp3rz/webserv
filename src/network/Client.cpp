@@ -9,10 +9,13 @@
 /*   Updated: 2023/06/09 12:44:59 by akhouya          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 #include<iostream>
 #include<fstream>
-#include "../../inc/Client.hpp"
+#include "Client.hpp"
 #include <fstream>
+#include "ResourceHandler.hpp"
+
 void read_from_file(const std::string filename)
 {
     std::cout << "read from file" << std::endl;
@@ -77,10 +80,12 @@ static std::string find_key(std::map<std::string, std::string> map, std::string 
     return "";
 }
 
-Client::Client(int sock) {
+Client::Client(Config &config, int sock): _config(config), fd(-1) {
+ 
     _sock = sock;
 }
-Client::Client(int port, int sock) {
+Client::Client(Config &config, int port, int sock): _config(config), fd(-1) {
+
     _request.body_lenght = 0;
     _request.body = "";
     _request.first_body = false;
@@ -94,26 +99,13 @@ request_t Client::get_request() {
     return _request;
 }
 
-void Client::set_request(request_t request) {
-    _request = request;
-}
-
 
 std::string Client::get_buffer() {
     return _buffer;
 }
 
-
-void Client::set_buffer(std::string buffer) {
-    _buffer = buffer;
-}
-
 int Client::get_sock() {
     return _sock;
-}
-
-void Client::set_sock(int sock) {
-    _sock = sock;
 }
 
 void Client::parse_request() {
@@ -231,9 +223,21 @@ void Client::save_body(std::string &buffer, int &close_conn) {
     else
         close_conn = true;
 }
-    
-int Client::respond(Config &config)
-{
-    this->_response.send(_sock, *this, config);
-    return 0;
+
+bool Client::response() {
+    if (fd == -1)
+    {
+        ResourceHandler _resourceHandler(_config, *this);
+        fd = _resourceHandler.handle_request();
+    }
+    if (fd == -1)
+        return true;
+    char buffer[1024];
+    int bytes_read = read(fd, buffer, 1024);
+    if (bytes_read == -1)
+        return true;
+    int bytes_sent = send(_sock, buffer, bytes_read, 0);
+    if (bytes_sent == -1)
+        return true;
+    return true;
 }

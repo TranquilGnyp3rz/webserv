@@ -6,14 +6,15 @@
 #include <fstream>
 #include <map>
 #include "Config_parsing.hpp"
-#include "Client.hpp"
 #include "macros.hpp"
 #include <ctime>
+#include "Client.hpp"
+
 
 class ResourceHandler
 {
     private:
-        Client _client;
+        Client &_client;
         std::vector<Server> &_servers;
         std::map<int, std::string> httpResponses;
 

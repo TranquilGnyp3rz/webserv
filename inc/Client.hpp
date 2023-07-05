@@ -19,22 +19,21 @@
 #include <sstream>
 #include "request.hpp"
 #include "SocketServer.hpp"
-#include "ResourceHandler.hpp"
 #include "Config_parsing.hpp"
-
-class Response;
 
 class Client {
     private:
-        Response    _response;
-        request_t   _request;
-        std::string _buffer;
-        bool        _bad_request;
-        int         _port;
-        int         _sock;
+        Config          &_config;
+        int             fd;
+        request_t       _request;
+        std::string     _buffer;
+        bool            _bad_request;
+        int             _port;
+        int             _sock;
+
     public:
-        Client(int sock);
-        Client(int port, int sock);
+        Client(Config &config, int sock);
+        Client(Config &config, int port, int sock);
         void parse_request();
         void save_body(std::string &buffer, int &close_conn);
  
@@ -52,4 +51,6 @@ class Client {
         void set_first_body(bool first_body) {
             _request.first_body = first_body;
         }
+        bool response();
+  
 };
