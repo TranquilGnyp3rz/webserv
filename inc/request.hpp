@@ -6,13 +6,19 @@
 
 
 typedef struct request_s {
+
     std::string method;
     std::string path;
     std::string http_version;
-    std::map<std::string, std::string>  headers;
     std::string body_file;
-    int lenght_body;
+    std::string body;
+
+    int body_lenght;
+
     bool    headerdone;
+    bool    first_body;
+
+    std::map<std::string, std::string>  headers;
 }   request_t;
 
 #endif
