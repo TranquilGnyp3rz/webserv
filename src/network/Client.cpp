@@ -32,6 +32,7 @@ void read_from_file(const std::string filename)
 std::string generate_filename() {
     std::string filename = "/tmp/";
     std::string charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+    srand(time(NULL));
     for (int i = 0; i < 10; i++)
     {
         filename += charset[rand() % charset.length()];
@@ -39,19 +40,11 @@ std::string generate_filename() {
     filename += ".txt";
     return filename;
 }
-// write in randome file
 void write_in_file(std::string filename, std::string buffer) {
     std::ofstream file;
-    //append to file
     file.open(filename, std::ios::out | std::ios::app);
     file << buffer;
     file.close();
-    // exit(0);
-
-
-    // file.open(filename, std::ios::out | std::ios::app);
-    // file << buffer;
-    // file.close();
 }
 std::string trim(const std::string& str) 
 {  
@@ -61,7 +54,6 @@ std::string trim(const std::string& str)
     s.erase(s.find_last_not_of(' ')+1);
     return s;
 }
-//get port
 int Client::get_port() {
     return _port;
 }
@@ -77,7 +69,6 @@ static std::vector<std::string>    split_words(const std::string &str, char c) {
     }
     return words;
 }
-//find a key in map 
 static std::string find_key(std::map<std::string, std::string> map, std::string key) {
     std::map<std::string, std::string>::iterator it;
     it = map.find(key);
@@ -88,7 +79,6 @@ static std::string find_key(std::map<std::string, std::string> map, std::string 
 
 Client::Client(int sock) {
     _sock = sock;
-    // _body_file.assign("ss");
 }
 Client::Client(int port, int sock) {
     _request.body_lenght = 0;
@@ -159,7 +149,6 @@ void Client::parse_request() {
         }
     }
 }
-// check if hexadicimal number
 
 
 void Client::save_body(std::string &buffer, int &close_conn) {

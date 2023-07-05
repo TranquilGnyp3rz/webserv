@@ -12,22 +12,7 @@
 
 #include "WebServer.hpp"
 
-// void read_from_file(const std::string filename)
-// {
-//     std::cout << "read from file" << std::endl;
-//     std::ifstream file(filename); 
-//     if (file.is_open()) {
-//         std::string line;
-//         while (std::getline(file, line)) {
-//             // Process each line from the file
-//             std::cout << line << std::endl;
-//         }
-        
-//         file.close();
-//     } else {
-//         std::cout << "Unable to open the file." << std::endl;
-//     }
-// }
+
 WebServer::WebServer(std::string config_file)
 {
     _config.Handle_configFile(config_file);
@@ -118,9 +103,7 @@ void WebServer::accepter(std::vector<SocketServer> sockets, fd_set *master_set, 
             if (FD_ISSET(i , &response_set))
             {
                 std::cout << "Discriptor " << i << "is writeable" << std::endl;
-                // write and html msg to broweser in the socket
                 responder(_clients.find(i)->second);
-                // close the socket
                 if (true) {
                     // remove(_clients.find(i)->second.get_body_file().c_str());
                     std::cout << "close socket " << i << std::endl;
@@ -139,66 +122,45 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response
     std::cout << "Discriptor " << i << "is readale" << std::endl;
 
     int close_conn = false;
-    int rc, len;
+    int rc;
     char buffer[65536];
 
     rc = recv(i, buffer, sizeof(buffer), 0);
-        if (rc < 0)
+    if (rc < 0)
+    {
+        if (errno != EWOULDBLOCK)
         {
-            if (errno != EWOULDBLOCK)
-            {
-                perror("  recv() failed");
-                close_conn = true;
-            }
-        }
-        if (rc == 0)
-        {
-
-            std::cout << "Connection closed" << std::endl;
+            perror("  recv() failed");
             close_conn = true;
         }
-        len = rc;
-        std::string body;
-        std::cout << "  " << len << " bytes received" << std::endl;
-        std::string buf(buffer, rc);
-        if (_clients.find(i) == _clients.end())
-        {
-            _clients.insert(std::make_pair(i, Client(i)));
-            _clients.find(i)->second.set_buffer(buf);
-        }
-        else
-        {
-            
-            _clients.find(i)->second.set_buffer(_clients.find(i)->second.get_buffer() + buf);
-        }
+    }
+    if (rc == 0)
+    {
 
+        std::cout << "Connection closed" << std::endl;
+        close_conn = true;
+    }
+    std::cout << "  " << rc << " bytes received" << std::endl;
+     std::string body;
+    std::string buf(buffer, rc);
+    std::string::size_type pos;
+
+    _clients.find(i)->second.set_buffer(_clients.find(i)->second.get_buffer() + buf);
+
+    pos = _clients.find(i)->second.get_buffer().find("\r\n\r\n");
+    if (pos != std::string::npos)
+    {
+        _clients.find(i)->second.parse_request();
         
-        if (_clients.find(i)->second.get_buffer().find("\r\n\r\n") != std::string::npos)
-        {
-            _clients.find(i)->second.parse_request();
-            
-            if (_clients.find(i)->second.get_first_body() == false) {
-                std::string::size_type pos = _clients.find(i)->second.get_buffer().find("\r\n\r\n");
-                body = _clients.find(i)->second.get_buffer().substr(pos + 4);
-                _clients.find(i)->second.set_first_body(true);
-            }
-            else {
-                body = buf;
-            }
-            _clients.find(i)->second.save_body( body, close_conn);
-            // std::cout << "method = " << _clients.find(i)->second.get_request().method << std::endl;
-
-            // std::cout << "path = " << _clients.find(i)->second.get_request().path << std::endl;
-            // std::cout << "http_version = " << _clients.find(i)->second.get_request().http_version << std::endl;
-
-            // std::map<std::string, std::string>::const_iterator iter;
-            // const std::map<std::string, std::string> &headers = _clients.find(i)->second.get_request().headers;
-            // // close_conn = true;
-            // for (iter = headers.begin(); iter != headers.end(); ++iter)
-            // {
-            //     std::cout << iter->first << " : " << iter->second << std::endl;
-            // }
+        if (_clients.find(i)->second.get_first_body() == false) {
+            body = _clients.find(i)->second.get_buffer().substr(pos + 4);
+            _clients.find(i)->second.set_first_body(true);
         }
+        else {
+            body = buf;
+        }
+        _clients.find(i)->second.save_body( body, close_conn);
+    }
 
     if (close_conn)
     {
@@ -257,14 +219,9 @@ int WebServer::accept_socket(fd_set *working_set, int i, int *max_sd, int *new_s
     {
         std::cout << "  New incoming connection - " << *new_sd << std::endl;
         clients.insert(std::make_pair(*new_sd, Client(ports, *new_sd)));
-
-        // std::cout << clients.find(*new_sd)->second.get_body_file() << std::endl;
-        // std::cout << "body lenght " << clients.find(*new_sd)->second.get_request().lenght_body<< std::endl;
         FD_SET(*new_sd, master_set);
         if (*new_sd > *max_sd)
-        {
             *max_sd = *new_sd;
-        }
     }
     return 0;
 }
