@@ -6,6 +6,8 @@
 #include <fstream>
 #include <map>
 #include "Config_parsing.hpp"
+#include "Server.hpp"
+#include "Location.hpp"
 #include "macros.hpp"
 #include <ctime>
 #include "Client.hpp"
@@ -29,9 +31,9 @@ class ResourceHandler
         int handle_request();
         int handle_location(Server &server, std::vector<Location> &locations);
         int handle_method(Server &server, Location &locations);
-        int get_file(Server const &server, Location const &location);
-        bool delete_file(Server const &server, Location const &location);
-        int post_file(Server const &server, Location const &location);
+        int get_file(Server  &server, Location  &location);
+        bool delete_file(Server  &server, Location  &location);
+        int post_file(Server  &server, Location  &location);
 };
 
 #endif

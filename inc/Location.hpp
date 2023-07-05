@@ -40,6 +40,8 @@ class Location
         // std::string                 get_uploadPath();
         std::string                 get_redirection();
 
+        bool operator < (const Location &b) const;
+
 };
 
 #endif

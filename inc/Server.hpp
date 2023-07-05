@@ -52,6 +52,9 @@ public:
     std::vector<std::string>&					get_cgiextension();
     std::vector<Location>&					    get_locations();
 
+    /*methods*/
+    void sort_locations();
+
 
 };
 

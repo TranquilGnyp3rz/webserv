@@ -24,6 +24,19 @@ WebServer::WebServer(std::string config_file)
     }
 }
 
+int find_sockets(std::vector<SocketServer> sockets, int sock)
+{
+    std::vector<SocketServer>::iterator it;
+    for (it = sockets.begin(); it != sockets.end(); it++)
+    {
+        if (it->get_sock() == sock){
+             return it->get_port();
+        }
+           
+    }
+    return 1;
+}
+
 void WebServer::run()
 {
     fd_set master_set;
@@ -89,18 +102,7 @@ void WebServer::accepter(std::vector<SocketServer> &sockets, fd_set *master_set,
     }
 }
 
-int find_sockets(std::vector<SocketServer> sockets, int sock)
-{
-    std::vector<SocketServer>::iterator it;
-    for (it = sockets.begin(); it != sockets.end(); it++)
-    {
-        if (it->get_sock() == sock){
-             return it->get_port();
-        }
-           
-    }
-    return 1;
-}
+
 
 
 void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response_set)

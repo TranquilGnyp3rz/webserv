@@ -127,3 +127,8 @@ std::vector<Location>& Server::get_locations()
 {
     return _locations;
 }
+
+void Server::sort_locations()
+{
+   std::reverse(_locations.begin(), _locations.end());
+}

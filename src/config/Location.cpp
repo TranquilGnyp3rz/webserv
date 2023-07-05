@@ -110,3 +110,7 @@ std::string                 Location::get_redirection()
     return _redirection;
 }
 
+bool Location::operator < (const Location &b) const
+{
+    return (_locationName < b._locationName);
+}

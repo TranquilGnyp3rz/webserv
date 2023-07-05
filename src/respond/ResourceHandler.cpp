@@ -55,16 +55,16 @@ int ResourceHandler::handle_request()
 {
     int fd = check_request();
 
-    if (fd != -1)
-        return fd;
-    for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); it++)
-    {
-         if (it->get_server_name() == _client.get_request().headers["Host"])
-         {
-             it->sort_locations();
-             return handle_location(*it , it->get_locations());
-         }
-    }
+    // if (fd != -1)
+    //     return fd;
+    // for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); it++)
+    // {
+    //      if (it->get_server_name() == _client.get_request().headers["Host"])
+    //      {
+    //          it->sort_locations();
+    //          return handle_location(*it , it->get_locations());
+    //      }
+    // }
     return costum_error_page(404);
 }
 
@@ -108,15 +108,15 @@ bool ResourceHandler::location_match(std::string location, std::string path)
         if (location[i] != path[i])
             break ;
     }
-    if (path[location.length()] == '/' || path[location.length()] == std::string:end)
+    if (path[location.length()] == '/' || path[location.length() - 1] == path.back())
         return true;
     return false;
 }
 
-int ResourceHandler::get_file(Server const &server, Location const &location)
+int ResourceHandler::get_file(Server  &server, Location  &location)
 {
     std::string file_path;
-    std::string requested_file = _client.get_request().path[location.get_locationName().length()];
+    std::string requested_file = _client.get_request().path.substr(location.get_locationName().length());
 
     if (location.get_root() == "")
         file_path = server.get_root() + requested_file;
@@ -129,19 +129,13 @@ int ResourceHandler::get_file(Server const &server, Location const &location)
     return fd;
 }
 
-bool ResourceHandler::delete_file(Server const &server, Location const &location)
+bool ResourceHandler::delete_file(Server  &server, Location  &location)
 {
-    std::string file_path;
-    std::string requested_file = _client.get_request().path[location.get_locationName().length()];
-    if (location.get_root() == "")
-        file_path = server.get_root() + requested_file;
-    else
-        file_path = location.get_root() + requested_file;
-    
+  
     return true;
 }
 
-int ResourceHandler::post_file(Server const &server, Location const &location)
+int ResourceHandler::post_file(Server  &server, Location  &location)
 {
    
     return 0;
