@@ -5,12 +5,16 @@
 #include <vector>
 #include <fstream>
 #include <map>
+#include <ctime>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "Config_parsing.hpp"
 #include "Server.hpp"
 #include "Location.hpp"
 #include "macros.hpp"
-#include <ctime>
 #include "Client.hpp"
+#include "response.hpp"
 
 
 class ResourceHandler
@@ -20,20 +24,19 @@ class ResourceHandler
         std::vector<Server> &_servers;
         std::map<int, std::string> httpResponses;
 
-        /* private methods */
-        int costum_error_page(int error_code);
+        response_t costum_error_page(int error_code);
         std::string custom_error(const std::string& status);
-        int check_request( void );
+        response_t check_request( void );
         std::string random_string( size_t length );
         bool location_match(std::string location, std::string path);
+        int get_file_size(int fd);
     public:
         ResourceHandler(Config &config, Client &client);
-        int handle_request();
-        int handle_location(Server &server, std::vector<Location> &locations);
-        int handle_method(Server &server, Location &locations);
-        int get_file(Server  &server, Location  &location);
-        bool delete_file(Server  &server, Location  &location);
-        int post_file(Server  &server, Location  &location);
+        response_t handle_request();
+        response_t handle_location(Server &server, std::vector<Location> &locations);
+        response_t handle_method(Server &server, Location &locations);
+        response_t get_file(Server  &server, Location  &location);
+        response_t get_directory(Server  &server, Location  &location);
 };
 
 #endif

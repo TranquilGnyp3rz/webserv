@@ -132,3 +132,9 @@ void Server::sort_locations()
 {
    std::reverse(_locations.begin(), _locations.end());
 }
+
+int Server::get_port()
+{
+    int port = atoi(_listen.c_str());
+    return port;
+}

@@ -6,7 +6,7 @@
 /*   By: heloufra <heloufra@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/24 17:44:51 by akhouya           #+#    #+#             */
-/*   Updated: 2023/06/09 12:44:59 by akhouya          ###   ########.fr       */
+/*   Updated: 2023/07/08 17:18:24 by heloufra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include "Client.hpp"
 #include <fstream>
 #include "ResourceHandler.hpp"
+
 
 void read_from_file(const std::string filename)
 {
@@ -80,11 +81,11 @@ static std::string find_key(std::map<std::string, std::string> map, std::string 
     return "";
 }
 
-Client::Client(Config &config, int sock): _config(config), fd(-1) {
+Client::Client(Config &config, int sock): _config(config) {
  
     _sock = sock;
 }
-Client::Client(Config &config, int port, int sock): _config(config), fd(-1) {
+Client::Client(Config &config, int port, int sock): _config(config){
 
     _request.body_lenght = 0;
     _request.body = "";
@@ -225,19 +226,23 @@ void Client::save_body(std::string &buffer, int &close_conn) {
 }
 
 bool Client::response() {
-    if (fd == -1)
-    {
-        ResourceHandler _resourceHandler(_config, *this);
-        fd = _resourceHandler.handle_request();
-    }
-    if (fd == -1)
-        return true;
-    char buffer[1024];
-    int bytes_read = read(fd, buffer, 1024);
-    if (bytes_read == -1)
-        return true;
-    int bytes_sent = send(_sock, buffer, bytes_read, 0);
-    if (bytes_sent == -1)
-        return true;
+  
+    response_t response = ResourceHandler(_config, *this).handle_request();
+    std::string str = "";
+    char buffer[1024] = {0};
+    
+    std::cout << "client : response : " << response.body_file << std::endl;
+    int rc = read(response.body_file, buffer, 1024);
+    std::cout << "client : buffer : " << rc <<buffer << std::endl;
+    
+    int size = strlen(buffer);
+    str += response.headers;
+    str += std::string(buffer);
+  
+    std::cout << "-------------------------------------" << std::endl;
+    std::cout << str << std::endl;
+    std::cout << "-------------------------------------" << std::endl;
+    send(_sock, str.c_str(), str.size(), 0);
+    close(response.body_file);
     return true;
 }

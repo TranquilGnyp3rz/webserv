@@ -41,6 +41,7 @@ public:
 
     /*geters*/
     std::string									get_listen();
+    int                                         get_port();
     std::string                                 get_host();
     std::string									get_server_name();
     std::string									get_root();

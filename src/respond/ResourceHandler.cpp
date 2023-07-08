@@ -51,24 +51,24 @@ ResourceHandler::ResourceHandler(Config &config, Client &client) : _client(clien
     }
 }
 
-int ResourceHandler::handle_request()
+response_t ResourceHandler::handle_request()
 {
-    int fd = check_request();
+    // int fd; // = check_request();
+    // response_t response;
 
     // if (fd != -1)
     //     return fd;
-    // for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); it++)
-    // {
-    //      if (it->get_server_name() == _client.get_request().headers["Host"])
-    //      {
-    //          it->sort_locations();
-    //          return handle_location(*it , it->get_locations());
-    //      }
-    // }
+    for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); it++)
+    {
+         if (it->get_server_name() == _client.get_request().headers["Host"] && _client.get_port() == it->get_port())
+         {
+             return handle_location(*it , it->get_locations());
+         }
+    }
     return costum_error_page(404);
 }
 
-int ResourceHandler::handle_location(Server &server, std::vector<Location> &locations)
+response_t ResourceHandler::handle_location(Server &server, std::vector<Location> &locations)
 {
     for (std::vector<Location>::iterator it = locations.begin(); it != locations.end(); it++)
     {
@@ -80,153 +80,109 @@ int ResourceHandler::handle_location(Server &server, std::vector<Location> &loca
     return costum_error_page(404);
 }
 
-int ResourceHandler::handle_method(Server &server, Location &location)
+response_t ResourceHandler::handle_method(Server &server, Location &location)
 {
-    std::vector<std::string> methods = location.get_allowedMethods();
-    std::string method = _client.get_request().method;
-
-    for (std::vector<std::string>::iterator it = methods.begin(); it != methods.end(); it++)
-    {
-        if (*it == method)
-            break ;
-    }
-
-    if (method == "GET")
+    if (_client.get_request().method == "GET")
         return get_file(server, location);
-    else if (method == "DELETE")
-        return delete_file(server, location);
-    else if (method == "POST")
-        return post_file(server, location);
     else
         return costum_error_page(405);
 }
 
 bool ResourceHandler::location_match(std::string location, std::string path)
 {
-    for (int i = 0; i < location.length(); i++)
-    {
-        if (location[i] != path[i])
-            break ;
-    }
-    if (path[location.length()] == '/' || path[location.length() - 1] == path.back())
+    std::string tmp = path.substr(0, location.length());
+    if (tmp == location && (path[location.length()] == '/' || path[location.length()] == '\0'))
         return true;
     return false;
 }
 
-int ResourceHandler::get_file(Server  &server, Location  &location)
+// response_t ResourceHandler::get_directory(Server  &server, Location  &location)
+// {
+//     if (location.get_autoindex() == "off")
+//         return costum_error_page(403);
+    
+// }
+
+response_t ResourceHandler::get_file(Server  &server, Location  &location)
 {
     std::string file_path;
-    std::string requested_file = _client.get_request().path.substr(location.get_locationName().length());
+    response_t response;
 
-    if (location.get_root() == "")
-        file_path = server.get_root() + requested_file;
+    if (_client.get_request().path == location.get_locationName() && location.get_index() != "")
+        file_path = location.get_root() + location.get_locationName() + "/" + location.get_index();
+    else if (_client.get_request().path == location.get_locationName() && location.get_index() != "")
+        return get_directory(server, location);
     else
-        file_path = location.get_root() + requested_file;
-
+        file_path = location.get_root() + _client.get_request().path; 
     int fd = open(file_path.c_str(), O_RDONLY);
     if (fd == -1)
         return costum_error_page(404);
-    return fd;
+    response.body_file = fd;
+    response.headers = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\ncontent-length: " + std::to_string(get_file_size(fd)) + "\r\n\r\n";
+    return response;
 }
 
-bool ResourceHandler::delete_file(Server  &server, Location  &location)
+response_t ResourceHandler::costum_error_page(int error_code)
 {
-  
-    return true;
-}
-
-int ResourceHandler::post_file(Server  &server, Location  &location)
-{
-   
-    return 0;
-}
-
-int ResourceHandler::costum_error_page(int error_code)
-{
+    response_t response;
     char buffer[1024] = {0};
     char filename[1024] = {0};
-    std::string random = "/tmp/" + random_string(42) + ".html";
+    std::string random = "/tmp/" + random_string(5);
+    random  += ".html";
+    std::cout << "random: " << random << std::endl;
     int fd;
 
-    std::string response =  "HTTP/1.1 "
-                            + this->httpResponses[error_code] + "\r\n"
-                          "Content-Type: text/html\r\n"
-                          "\r\n";
-    
-    response += this->custom_error(this->httpResponses[error_code]);
-
-    strncpy(buffer, response.c_str(), response.length());
+    std::string error = this->custom_error(this->httpResponses[error_code]);
+   
+    response.headers = "HTTP/1.1 " + std::to_string(error_code) + " OK\r\nContent-Type: text/html\r\ncontent-length: " + std::to_string(error.length()) + "\r\n\r\n";
+    strncpy(buffer, error.c_str(), error.length());
     strncpy(filename, random.c_str() , strlen("/tmp/error.html"));
-    fd = open(filename, O_RDWR | O_CREAT | O_TRUNC, 0666);
-    write(fd, buffer, strlen(buffer));
-    return fd;
+    fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    int writen = write(fd, buffer, strlen(buffer));
+    std::cout << "writen :" << writen <<  "buffer :" << buffer << std::endl;
+    close(fd);
+    fd = open(filename, O_RDONLY);
+    std::cout << "Resource : fd: " << fd << std::endl;
+    response.body_file = fd;
+    return response;
 }
 
 std::string ResourceHandler::custom_error(const std::string& status) {
-    std::string htmlPage = "<html>\n";
-    htmlPage += "<head>\n";
-    htmlPage += "<title>Error " + status + "</title>\n";
-    htmlPage += "<style>\n";
-    htmlPage += "body {\n";
-    htmlPage += "    font-family: Arial, sans-serif;\n";
-    htmlPage += "    margin: 0;\n";
-    htmlPage += "    padding: 0;\n";
-    htmlPage += "    background-color: #f2f2f2;\n";
-    htmlPage += "}\n";
-    htmlPage += ".container {\n";
-    htmlPage += "    width: 60%;\n";
-    htmlPage += "    margin: 100px auto;\n";
-    htmlPage += "    padding: 20px;\n";
-    htmlPage += "    background-color: #fff;\n";
-    htmlPage += "    border-radius: 5px;\n";
-    htmlPage += "    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);\n";
-    htmlPage += "}\n";
-    htmlPage += "h1 {\n";
-    htmlPage += "    color: #d8000c;\n";
-    htmlPage += "}\n";
-    htmlPage += "</style>\n";
-    htmlPage += "</head>\n";
-    htmlPage += "<body>\n";
-    htmlPage += "<div class=\"container\">\n";
-    htmlPage += "<h1>Error " + status + "</h1>\n";
-    htmlPage += "</div>\n";
-    htmlPage += "</body>\n";
-    htmlPage += "</html>\n";
-
+    std::string htmlPage = "<html><head><title>Error " + status + "</title><style>body{font-family:'Courier New',monospace;margin:0;padding:0;background-color:#000;}.container{width:60%;margin:100px auto;padding:20px;background-color:#001a00;border-radius:5px;box-shadow:0 0 10px rgba(0,255,0,0.3);animation:glitch 2s infinite;}@keyframes glitch{0%{transform:translate(0);}20%{transform:translate(-2px,-2px);}40%{transform:translate(2px,2px);}60%{transform:translate(-2px,-2px);}80%{transform:translate(2px,2px);}100%{transform:translate(0);}}h1{color:#00ff00;text-align:center;text-transform:uppercase;letter-spacing:2px;font-size:32px;text-shadow:0 0 10px #00ff00,0 0 20px #00ff00,0 0 30px #00ff00;animation:glitch-text 2s infinite;}@keyframes glitch-text{0%{transform:translate(0);}20%{transform:translate(-2px,-2px);}40%{transform:translate(2px,2px);}60%{transform:translate(-2px,-2px);}80%{transform:translate(2px,2px);}100%{transform:translate(0);}}</style></head><body><div class=\"container\"><h1>Error " + status + "</h1></div></body></html>";
     return htmlPage;
 }
 
-int ResourceHandler::check_request( void ) {
-    request_t request = this->_client.get_request();
+// reponse_t ResourceHandler::check_request( void ) {
+//     request_t request = this->_client.get_request();
 
-    if (request.headers.find("Transfer-Encoding") != request.headers.end())
-    {
-        if (request.headers["Transfer-Encoding"] != "chunked")
-            return this->costum_error_page(501);
-    }
-    if (request.headers.find("Content-Length") != request.headers.end() && request.headers.find("Transfer-Encoding") != request.headers.end()
-        && request.method == "POST")
-    {
-        return this->costum_error_page(400);
-    }
-    // if (this->containsAnyChar(request.path, ALLOWED_URL_CHAR) == true)
-    // {
-    //     return this->costum_error_page(400);
-    // }
-    if (request.method != "GET" && request.method != "POST" && request.method != "DELETE")
-    {
-        return this->costum_error_page(501);
-    }
-    if (request.http_version != "HTTP/1.1")
-    {
-        return this->costum_error_page(505);
-    }
-    if (request.path.size() > MAX_URL_SIZE)
-    {
-        return this->costum_error_page(4);
-    }
-    return -1;
-}
+//     if (request.headers.find("Transfer-Encoding") != request.headers.end())
+//     {
+//         if (request.headers["Transfer-Encoding"] != "chunked")
+//             return this->costum_error_page(501);
+//     }
+//     if (request.headers.find("Content-Length") != request.headers.end() && request.headers.find("Transfer-Encoding") != request.headers.end()
+//         && request.method == "POST")
+//     {
+//         return this->costum_error_page(400);
+//     }
+//     // if (this->containsAnyChar(request.path, ALLOWED_URL_CHAR) == true)
+//     // {
+//     //     return this->costum_error_page(400);
+//     // }
+//     if (request.method != "GET" && request.method != "POST" && request.method != "DELETE")
+//     {
+//         return this->costum_error_page(501);
+//     }
+//     if (request.http_version != "HTTP/1.1")
+//     {
+//         return this->costum_error_page(505);
+//     }
+//     if (request.path.size() > MAX_URL_SIZE)
+//     {
+//         return this->costum_error_page(4);
+//     }
+//     return -1;
+// }
 
 std::string ResourceHandler::random_string( size_t length )
 {
@@ -240,4 +196,12 @@ std::string ResourceHandler::random_string( size_t length )
         str += set[rand() % (sizeof(set) - 1)];
     }
     return str;
+}
+
+int ResourceHandler::get_file_size(int fd)
+{
+    struct stat stat_buf;
+
+    fstat(fd, &stat_buf);
+    return stat_buf.st_size;
 }

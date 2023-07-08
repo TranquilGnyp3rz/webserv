@@ -93,6 +93,8 @@ void WebServer::accepter(std::vector<SocketServer> &sockets, fd_set *master_set,
                 if (_clients.find(i)->second.response()) {
                     // remove(_clients.find(i)->second.get_body_file().c_str());
                     std::cout << "close socket " << i << std::endl;
+                    if (*max_sd == i)
+                        *max_sd -= 1;
                     FD_CLR(i, &response_set);
                     close(i);
                     _clients.erase(i);
@@ -134,7 +136,7 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response
     std::string buf(buffer, rc);
     std::string::size_type pos;
 
-    // _clients.find(i)->second.set_buffer(_clients.find(i)->second.get_buffer() + buf);
+    _clients.find(i)->second.set_buffer(_clients.find(i)->second.get_buffer() + buf);
 
     pos = _clients.find(i)->second.get_buffer().find("\r\n\r\n");
     if (pos != std::string::npos)
@@ -156,13 +158,13 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response
         std::cout << "  Connection closed "<< i << std::endl;
         FD_SET(i, response_set);
         FD_CLR(i, master_set);
-        if (i == *max_sd)
-        {
-            while (FD_ISSET(*max_sd, master_set) == false)
-            {
-                *max_sd -= 1;
-            }
-        }
+        // if (i == *max_sd)
+        // {
+        //     while (FD_ISSET(*max_sd, master_set) == false)
+        //     {
+        //         *max_sd -= 1;
+        //     }
+        // }
     }
 }
 

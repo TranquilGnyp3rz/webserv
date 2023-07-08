@@ -3,7 +3,7 @@ NAME= webserv
 SRC = ./src/main.cpp ./src/config/Config_parsing.cpp ./src/config/Server.cpp ./src/config/Location.cpp  ./src/network/Client.cpp ./src/network/SocketServer.cpp ./src/server/WebServer.cpp ./src/respond/ResourceHandler.cpp
 
 CC = c++
-FLAGS= -std=c++98 #-fsanitize=address -g3
+FLAGS= -std=c++98 -fsanitize=address -g3
 PARA  = -c 
 
 OBJ= $(SRC:.cpp=.o)
