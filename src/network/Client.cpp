@@ -6,7 +6,7 @@
 /*   By: heloufra <heloufra@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/24 17:44:51 by akhouya           #+#    #+#             */
-/*   Updated: 2023/07/08 17:18:24 by heloufra         ###   ########.fr       */
+/*   Updated: 2023/07/09 17:20:15 by heloufra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -229,15 +229,15 @@ bool Client::response() {
   
     response_t response = ResourceHandler(_config, *this).handle_request();
     std::string str = "";
-    char buffer[1024] = {0};
-    
-    std::cout << "client : response : " << response.body_file << std::endl;
-    int rc = read(response.body_file, buffer, 1024);
-    std::cout << "client : buffer : " << rc <<buffer << std::endl;
-    
-    int size = strlen(buffer);
+    char buffer[6000] = {0};
     str += response.headers;
-    str += std::string(buffer);
+    if (response.body ) {
+        std::cout << "client : response : " << response.body_file << std::endl;
+        int rc = read(response.body_file, buffer, 6000);
+        std::cout << "client : buffer : " << rc <<buffer << std::endl;
+        str += std::string(buffer);
+    }
+    
   
     std::cout << "-------------------------------------" << std::endl;
     std::cout << str << std::endl;

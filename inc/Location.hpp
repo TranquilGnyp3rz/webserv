@@ -41,6 +41,7 @@ class Location
         std::string                 get_redirection();
 
         bool operator < (const Location &b) const;
+        bool isMethodAllowed(std::string method);
 
 };
 

@@ -114,3 +114,13 @@ bool Location::operator < (const Location &b) const
 {
     return (_locationName < b._locationName);
 }
+
+ bool Location::isMethodAllowed(std::string method)
+ {
+    for (std::vector<std::string>::iterator it = _allowedMethods.begin(); it != _allowedMethods.end(); it++)
+    {
+        if (*it == method)
+            return true;
+    }
+    return false;
+ }

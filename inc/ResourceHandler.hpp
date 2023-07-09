@@ -6,15 +6,19 @@
 #include <fstream>
 #include <map>
 #include <ctime>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <dirent.h>
+#include <stdio.h>
 #include "Config_parsing.hpp"
 #include "Server.hpp"
 #include "Location.hpp"
 #include "macros.hpp"
 #include "Client.hpp"
 #include "response.hpp"
+
 
 
 class ResourceHandler
@@ -37,6 +41,7 @@ class ResourceHandler
         response_t handle_method(Server &server, Location &locations);
         response_t get_file(Server  &server, Location  &location);
         response_t get_directory(Server  &server, Location  &location);
+        response_t delete_file(Server  &server, Location  &location);
 };
 
 #endif

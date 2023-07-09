@@ -5,5 +5,6 @@ typedef struct s_response
 {
     std::string headers;
     int         body_file;
+    bool        body;
 }               response_t;
 #endif 

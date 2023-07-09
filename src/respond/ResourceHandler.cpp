@@ -82,8 +82,16 @@ response_t ResourceHandler::handle_location(Server &server, std::vector<Location
 
 response_t ResourceHandler::handle_method(Server &server, Location &location)
 {
-    if (_client.get_request().method == "GET")
+    if (_client.get_request().method == "GET") {
+        if (location.isMethodAllowed("GET" ) == false)
+            return costum_error_page(405);
         return get_file(server, location);
+    }
+    else if (_client.get_request().method == "DELETE") {
+        if (location.isMethodAllowed("DELETE" ) == false)
+            return costum_error_page(405);
+        return delete_file(server, location);
+    }
     else
         return costum_error_page(405);
 }
@@ -96,24 +104,86 @@ bool ResourceHandler::location_match(std::string location, std::string path)
     return false;
 }
 
-// response_t ResourceHandler::get_directory(Server  &server, Location  &location)
-// {
-//     if (location.get_autoindex() == "off")
-//         return costum_error_page(403);
-    
-// }
+response_t ResourceHandler::get_directory(Server  &server, Location  &location)
+{
+    std::string directoryPath = location.get_root() + location.get_locationName();
+    std::string html;
+    std::string htmlPath = "/tmp/" + random_string(10) + ".html";
+    std::vector<std::string> files;
+    response_t response;
+    DIR* dir;
+    int fd;
+    struct dirent* entry;
+
+    dir = opendir(directoryPath.c_str());
+    if (dir != nullptr) {
+        while ((entry = readdir(dir)) != nullptr) {
+            if (std::string(entry->d_name) != "." && std::string(entry->d_name) != "..") {
+                files.push_back(entry->d_name);
+            }
+        }
+        closedir(dir);
+    }
+    html += "<!DOCTYPE html>\n";
+    html += "<html>\n";
+    html += "<head>\n";
+    html += "<title>File List</title>\n";
+    html += "</head>\n";
+    html += "<body>\n";
+    html += "<h1>Autoindex</h1>\n";
+    html += "<ul>\n";
+    for (std::vector<std::string>::iterator it = files.begin(); it != files.end(); it++) {
+        html += "<li><a href=\"" + location.get_locationName() + "/" + *it + "\">" +  *it + "</a></li>\n";
+    }
+    html += "</ul>\n";
+    html += "</body>\n";
+    html += "</html>\n";
+
+    fd = open(htmlPath.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0644);
+    if (fd == -1) {
+        return costum_error_page(500);
+    }
+    if (write(fd, html.c_str(), html.length()) == -1) {
+        return costum_error_page(500);
+    }
+    close(fd);
+    fd = open(htmlPath.c_str(), O_RDONLY);
+    if (fd == -1) {
+        return costum_error_page(500);
+    }
+    response.body_file = fd;
+    response.headers = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\ncontent-length: " + std::to_string(get_file_size(fd)) + "\r\n\r\n";
+    return response; 
+}
 
 response_t ResourceHandler::get_file(Server  &server, Location  &location)
 {
     std::string file_path;
     response_t response;
+    response.body = true;
+    if (_client.get_request().path == location.get_locationName()) {
+        std::string index = location.get_root() + location.get_locationName() + "/";
+        if (location.get_index() != "")
+            index += location.get_index();
+        else
+            index += "index.html";
+       if (access(index.c_str(), R_OK) != -1) {
+            int fd = open(index.c_str(), O_RDONLY);
+            if (fd == -1)
+                return costum_error_page(404);
+            response.body_file = fd;
+            response.headers = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\ncontent-length: " + std::to_string(get_file_size(fd)) + "\r\n\r\n";
+            return response;
+        }
+        else if (location.get_autoIndex() == "on") {
+            return get_directory(server, location);
+        }
+        else {
+            return costum_error_page(404);
+        }
+       }
 
-    if (_client.get_request().path == location.get_locationName() && location.get_index() != "")
-        file_path = location.get_root() + location.get_locationName() + "/" + location.get_index();
-    else if (_client.get_request().path == location.get_locationName() && location.get_index() != "")
-        return get_directory(server, location);
-    else
-        file_path = location.get_root() + _client.get_request().path; 
+    file_path = location.get_root() + _client.get_request().path; 
     int fd = open(file_path.c_str(), O_RDONLY);
     if (fd == -1)
         return costum_error_page(404);
@@ -122,10 +192,23 @@ response_t ResourceHandler::get_file(Server  &server, Location  &location)
     return response;
 }
 
+response_t ResourceHandler::delete_file(Server  &server, Location  &location) {
+    std::string file_path = location.get_root() + _client.get_request().path;
+    response_t response;
+    response.body = false;
+
+    if (remove(file_path.c_str()) != 0)
+        return costum_error_page(404);
+    response.headers = "HTTP/1.1 204 OK\r\n\r\n";
+    return response;
+}
+
+
 response_t ResourceHandler::costum_error_page(int error_code)
 {
     response_t response;
-    char buffer[1024] = {0};
+    response.body = true;
+    char buffer[60000] = {0};
     char filename[1024] = {0};
     std::string random = "/tmp/" + random_string(5);
     random  += ".html";
