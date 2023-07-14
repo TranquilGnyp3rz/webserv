@@ -285,7 +285,7 @@ response_t ResourceHandler::dynamic_page(int status, bool config, Server &server
         std::string error = this->generate_page(this->httpResponses[status]);
         response.headers = "HTTP/1.1 " + std::to_string(status) + " OK\r\nContent-Type: text/html\r\ncontent-length: " + std::to_string(error.length()) + "\r\n\r\n";
         strncpy(buffer, error.c_str(), error.length());
-        strncpy(filename, random.c_str() , strlen("/tmp/error.html"));
+        strncpy(filename, random.c_str() , random.length());
         fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0666);
         int writen = write(fd, buffer, strlen(buffer));
         std::cout << "writen :" << writen <<  "buffer :" << buffer << std::endl;
@@ -294,7 +294,21 @@ response_t ResourceHandler::dynamic_page(int status, bool config, Server &server
         std::cout << "Resource : fd: " << fd << std::endl;
         response.body_file = fd;
     } else {
-        
+        std::vector<std::pair<int, std::string> >::iterator it;
+        for (it = server.get_error_pages().begin(); it != server.get_error_pages().end(); it++) {
+            if (it->first == status)
+            {
+                strncpy(filename, it->second.c_str() , it->second.length());
+                fd = open(filename, O_RDONLY);
+                if (fd == -1)
+                    return dynamic_page(500, false, server);
+                response.body_file = fd;
+                response.headers = "HTTP/1.1 " + std::to_string(status) + " OK\r\nContent-Type: text/html\r\ncontent-length: " + std::to_string(get_file_size(fd)) + "\r\n\r\n";
+                return response;
+            }
+        }
+        if (it == server.get_error_pages().end())
+            return dynamic_page(status, false, server);
     }
 
     return response;
