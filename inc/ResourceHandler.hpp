@@ -27,7 +27,19 @@ class ResourceHandler
         Client &_client;
         std::vector<Server> &_servers;
         std::map<int, std::string> httpResponses;
-
+        std::map<std::string, std::string> _mimeTypes;
+        std::map<std::string, std::string> _headers;
+    
+        response_t handle_location(Server &server, std::vector<Location> &locations);
+        response_t handle_method(Server &server, Location &locations);
+        response_t get_file(Server  &server, Location  &location);
+        response_t get_directory(Server  &server, Location  &location);
+        response_t delete_file(Server  &server, Location  &location);
+        std::string get_mime_type(std::string path);
+        std::string get_last_modified(std::string path);
+        std::string get_date();
+        std::string get_headers(std::map<std::string, std::string> &headers);
+        
         response_t costum_error_page(int error_code);
         std::string custom_error(const std::string& status);
         response_t check_request( void );
@@ -37,11 +49,7 @@ class ResourceHandler
     public:
         ResourceHandler(Config &config, Client &client);
         response_t handle_request();
-        response_t handle_location(Server &server, std::vector<Location> &locations);
-        response_t handle_method(Server &server, Location &locations);
-        response_t get_file(Server  &server, Location  &location);
-        response_t get_directory(Server  &server, Location  &location);
-        response_t delete_file(Server  &server, Location  &location);
+       
 };
 
 #endif

@@ -44,6 +44,69 @@ ResourceHandler::ResourceHandler(Config &config, Client &client) : _client(clien
     this->httpResponses.insert(std::make_pair(504, "504 Gateway Timeout"));
     this->httpResponses.insert(std::make_pair(505, "505 HTTP Version Not Supported"));
 
+
+    this->_mimeTypes["aac"] = "audio/aac";
+    this->_mimeTypes["abw"] = "application/x-abiword";
+    this->_mimeTypes["arc"] = "application/octet-stream";
+    this->_mimeTypes["avi"] = "video/x-msvideo";
+    this->_mimeTypes["azw"] = "application/vnd.amazon.ebook";
+    this->_mimeTypes["bin"] = "application/octet-stream";
+    this->_mimeTypes["bz"] = "application/x-bzip";
+    this->_mimeTypes["bz2"] = "application/x-bzip2";
+    this->_mimeTypes["csh"] = "application/x-csh";
+    this->_mimeTypes["css"] = "text/css";
+    this->_mimeTypes["csv"] = "text/csv";
+    this->_mimeTypes["doc"] = "application/msword";
+    this->_mimeTypes["epub"] = "application/epub+zip";
+    this->_mimeTypes["gif"] = "image/gif";
+    this->_mimeTypes["htm"] = "text/html";
+    this->_mimeTypes["html"] = "text/html";
+    this->_mimeTypes["ico"] = "image/x-icon";
+    this->_mimeTypes["ics"] = "text/calendar";
+    this->_mimeTypes["jar"] = "application/java-archive";
+    this->_mimeTypes["jpeg"] = "image/jpeg";
+    this->_mimeTypes["jpg"] = "image/jpeg";
+    this->_mimeTypes["js"] = "application/javascript";
+    this->_mimeTypes["json"] = "application/json";
+    this->_mimeTypes["mid"] = "audio/midi";
+    this->_mimeTypes["midi"] = "audio/midi";
+    this->_mimeTypes["mpeg"] = "video/mpeg";
+    this->_mimeTypes["mpkg"] = "application/vnd.apple.installer+xml";
+    this->_mimeTypes["odp"] = "application/vnd.oasis.opendocument.presentation";
+    this->_mimeTypes["ods"] = "application/vnd.oasis.opendocument.spreadsheet";
+    this->_mimeTypes["odt"] = "application/vnd.oasis.opendocument.text";
+    this->_mimeTypes["oga"] = "audio/ogg";
+    this->_mimeTypes["ogv"] = "video/ogg";
+    this->_mimeTypes["ogx"] = "application/ogg";
+    this->_mimeTypes["pdf"] = "application/pdf";
+    this->_mimeTypes["ppt"] = "application/vnd.ms-powerpoint";
+    this->_mimeTypes["rar"] = "application/x-rar-compressed";
+    this->_mimeTypes["rtf"] = "application/rtf";
+    this->_mimeTypes["sh"] = "application/x-sh";
+    this->_mimeTypes["svg"] = "image/svg+xml";
+    this->_mimeTypes["swf"] = "application/x-shockwave-flash";
+    this->_mimeTypes["tar"] = "application/x-tar";
+    this->_mimeTypes["tif"] = "image/tiff";
+    this->_mimeTypes["tiff"] = "image/tiff";
+    this->_mimeTypes["ttf"] = "font/ttf";
+    this->_mimeTypes["vsd"] = "application/vnd.visio";
+    this->_mimeTypes["wav"] = "audio/x-wav";
+    this->_mimeTypes["weba"] = "audio/webm";
+    this->_mimeTypes["webm"] = "video/webm";
+    this->_mimeTypes["webp"] = "image/webp";
+    this->_mimeTypes["woff"] = "font/woff";
+    this->_mimeTypes["woff2"] = "font/woff2";
+    this->_mimeTypes["xhtml"] = "application/xhtml+xml";
+    this->_mimeTypes["xls"] = "application/vnd.ms-excel";
+    this->_mimeTypes["xml"] = "application/xml";
+    this->_mimeTypes["xul"] = "application/vnd.mozilla.xul+xml";
+    this->_mimeTypes["zip"] = "application/zip";
+    this->_mimeTypes["3gp"] = "video/3gpp";
+    this->_mimeTypes["audio/3gpp"] = "audio/3gpp";
+    this->_mimeTypes["3g2"] = "video/3gpp2";
+    this->_mimeTypes["audio/3gpp2"] = "audio/3gpp2";
+    this->_mimeTypes["7z"] = "application/x-7z-compressed";
+
     /* tmp sort procedure */
     for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); it++)
     {
@@ -61,6 +124,13 @@ response_t ResourceHandler::handle_request()
     for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); it++)
     {
          if (it->get_server_name() == _client.get_request().headers["Host"] && _client.get_port() == it->get_port())
+         {
+             return handle_location(*it , it->get_locations());
+         }
+    }
+    for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); it++)
+    {
+         if (_client.get_port() == it->get_port())
          {
              return handle_location(*it , it->get_locations());
          }
@@ -83,12 +153,12 @@ response_t ResourceHandler::handle_location(Server &server, std::vector<Location
 response_t ResourceHandler::handle_method(Server &server, Location &location)
 {
     if (_client.get_request().method == "GET") {
-        if (location.isMethodAllowed("GET" ) == false)
+        if (location.isMethodAllowed("GET") == false)
             return costum_error_page(405);
         return get_file(server, location);
     }
     else if (_client.get_request().method == "DELETE") {
-        if (location.isMethodAllowed("DELETE" ) == false)
+        if (location.isMethodAllowed("DELETE") == false)
             return costum_error_page(405);
         return delete_file(server, location);
     }
@@ -196,7 +266,7 @@ response_t ResourceHandler::delete_file(Server  &server, Location  &location) {
     std::string file_path = location.get_root() + _client.get_request().path;
     response_t response;
     response.body = false;
-
+ 
     if (remove(file_path.c_str()) != 0)
         return costum_error_page(404);
     response.headers = "HTTP/1.1 204 OK\r\n\r\n";
@@ -285,6 +355,52 @@ int ResourceHandler::get_file_size(int fd)
 {
     struct stat stat_buf;
 
+
+
+
     fstat(fd, &stat_buf);
     return stat_buf.st_size;
+}
+
+std::string ResourceHandler::get_mime_type(std::string path)
+{
+    size_t pos = path.find_last_of(".");
+
+    if (pos == std::string::npos)
+        return "text/plain";
+    std::string extension = path.substr(pos + 1);
+    if (this->_mimeTypes.find(extension) == this->_mimeTypes.end())
+        return "text/plain";
+    std::string mime_type = this->_mimeTypes[extension];
+    return mime_type;
+}
+
+std::string ResourceHandler::get_last_modified(std::string path)
+{
+    struct stat attrib;
+    std::string last_modified;
+
+    stat(path.c_str(), &attrib);
+    last_modified = ctime(&attrib.st_mtime);
+    last_modified.erase(last_modified.end() - 1);
+    return last_modified;
+}
+
+std::string ResourceHandler::get_date()
+{
+    time_t now = time(0);
+    std::string date = ctime(&now);
+    date.erase(date.end() - 1);
+    return date;
+}
+
+std::string ResourceHandler::get_headers(std::map<std::string, std::string> &headers)
+{
+    std::string response_headers;
+
+    for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); it++)
+    {
+        response_headers += it->first + ": " + it->second + "\r\n";
+    }
+    return response_headers;
 }

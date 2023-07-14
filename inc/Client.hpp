@@ -6,11 +6,12 @@
 /*   By: heloufra <heloufra@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/24 14:40:30 by akhouya           #+#    #+#             */
-/*   Updated: 2023/07/08 15:57:15 by heloufra         ###   ########.fr       */
+/*   Updated: 2023/07/13 18:57:55 by heloufra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#ifndef CLIENT_HPP
+#define CLIENT_HPP
 
 #include <stdio.h>
 #include <netinet/in.h>
@@ -21,7 +22,7 @@
 #include "response.hpp"
 #include "SocketServer.hpp"
 #include "Config_parsing.hpp"
-
+#define CHUNKED_SIZE 4096
 
 class Client {
     private:
@@ -59,3 +60,5 @@ class Client {
         bool response();
   
 };
+
+#endif
