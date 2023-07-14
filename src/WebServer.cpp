@@ -96,7 +96,6 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response
     int close_conn = false;
     int rc;
     char buffer[65536];
-
     rc = recv(i, buffer, sizeof(buffer), 0);
     if (rc < 0)
     {
@@ -112,7 +111,6 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response
         std::cout << "Connection closed" << std::endl;
         close_conn = true;
     }
-    // std::cout << "  " << rc << " bytes received" << std::endl;
     std::string body;
     std::string buf(buffer, rc);
     std::string::size_type pos;

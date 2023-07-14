@@ -48,7 +48,7 @@ std::string trim(const std::string& str)
 int Client::get_port() {
     return _port;
 }
-static std::vector<std::string>    split_words(const std::string &str, char c) {
+static std::vector<std::string>    split_wordss(const std::string &str, char c) {
     std::vector<std::string> words;
 
     std::istringstream iss(str);
@@ -58,6 +58,22 @@ static std::vector<std::string>    split_words(const std::string &str, char c) {
         std::getline(iss, word, c);
         words.push_back(word);
     }
+    return words;
+}
+
+static std::vector<std::string>    split_words(const std::string &str, char c) {
+    std::vector<std::string> words;
+
+    std::string::size_type pos;
+    pos = str.find(c);
+    if (pos == std::string::npos)
+        exit(0);
+    
+    words.push_back(str.substr(0, pos));
+    
+    words.push_back(str.substr(pos + 1));
+    std::cout << "words[0]: " << words[0] << std::endl;
+    std::cout << "words[1]: " << words[1] << std::endl;
     return words;
 }
 static std::string find_key(std::map<std::string, std::string> map, std::string key) {
@@ -106,7 +122,7 @@ void Client::parse_request() {
     {
         if (firstline == false) {
             firstline = true;
-            vectors = (split_words(line, ' '));
+            vectors = (split_wordss(line, ' '));
             _request.method = vectors.at(0);
             _request.path = vectors.at(1);
             _request.http_version = vectors.at(2);
