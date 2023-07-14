@@ -310,10 +310,10 @@ std::string ResourceHandler::custom_error(const std::string& status) {
 //     {
 //         return this->costum_error_page(400);
 //     }
-//     // if (this->containsAnyChar(request.path, ALLOWED_URL_CHAR) == true)
-//     // {
-//     //     return this->costum_error_page(400);
-//     // }
+    // if (this->containsAnyChar(request.path, ALLOWED_URL_CHAR) == true)
+    // {
+    //     return this->costum_error_page(400);
+    // }
 //     if (request.method != "GET" && request.method != "POST" && request.method != "DELETE")
 //     {
 //         return this->costum_error_page(501);
