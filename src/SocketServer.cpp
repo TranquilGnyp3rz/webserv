@@ -6,11 +6,11 @@
 /*   By: heloufra <heloufra@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/19 11:56:18 by akhouya           #+#    #+#             */
-/*   Updated: 2023/06/01 13:26:16 by akhouya          ###   ########.fr       */
+/*   Updated: 2023/07/14 02:53:44 by heloufra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../../inc/SocketServer.hpp"
+#include "SocketServer.hpp"
 
 
 SocketServer::SocketServer(int domain, int service, int protocol, int port, u_long interface) {

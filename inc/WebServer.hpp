@@ -6,12 +6,12 @@
 /*   By: heloufra <heloufra@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/31 01:51:17 by heloufra          #+#    #+#             */
-/*   Updated: 2023/06/01 18:19:25 by heloufra         ###   ########.fr       */
+/*   Updated: 2023/07/14 02:52:21 by heloufra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef WebSERVER_HPP
-# define WebSERVER_HPP
+#ifndef WEBSERVER_HPP
+# define WEBSERVER_HPP
 # include <iostream>
 # include <string>
 # include <stdexcept>
@@ -30,7 +30,7 @@
 # include "Client.hpp"
 #include <map>
 #include <algorithm>
-#include "Config_parsing.hpp"
+#include "Config.hpp"
 
 
 class WebServer

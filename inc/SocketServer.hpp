@@ -6,12 +6,12 @@
 /*   By: heloufra <heloufra@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/19 11:56:13 by akhouya           #+#    #+#             */
-/*   Updated: 2023/06/01 13:20:21 by akhouya          ###   ########.fr       */
+/*   Updated: 2023/07/14 02:52:26 by heloufra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef SOCKET_SERVER_HPP
-#define SOCKET_SERVER_HPP
+#ifndef SOCKETSERVER_HPP
+#define SOCKETSERVER_HPP
 
 #include <netinet/in.h>
 #include <sys/socket.h>

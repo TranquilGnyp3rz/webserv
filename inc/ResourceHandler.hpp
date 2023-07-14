@@ -12,10 +12,9 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <stdio.h>
-#include "Config_parsing.hpp"
+#include "Config.hpp"
 #include "Server.hpp"
 #include "Location.hpp"
-#include "macros.hpp"
 #include "Client.hpp"
 #include "response.hpp"
 

@@ -6,7 +6,7 @@
 /*   By: heloufra <heloufra@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/24 14:40:30 by akhouya           #+#    #+#             */
-/*   Updated: 2023/07/13 18:57:55 by heloufra         ###   ########.fr       */
+/*   Updated: 2023/07/14 02:38:51 by heloufra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@
 #include "request.hpp"
 #include "response.hpp"
 #include "SocketServer.hpp"
-#include "Config_parsing.hpp"
+#include "Config.hpp"
 #define CHUNKED_SIZE 4096
 
 class Client {
