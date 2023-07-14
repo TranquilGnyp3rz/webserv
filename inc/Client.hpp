@@ -9,6 +9,7 @@
 #include "request.hpp"
 #include "response.hpp"
 #include "SocketServer.hpp"
+#include "ResourceHandler.hpp"
 #include "Config.hpp"
 
 #define CHUNKED_SIZE 4096

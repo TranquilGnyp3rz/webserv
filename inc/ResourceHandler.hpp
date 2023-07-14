@@ -18,6 +18,8 @@
 #include "Client.hpp"
 #include "response.hpp"
 
+class Client;
+
 class ResourceHandler {
     private:
         Client &_client;
@@ -36,8 +38,8 @@ class ResourceHandler {
         std::string get_date();
         std::string get_headers(std::map<std::string, std::string> &headers);
         
-        response_t costum_error_page(int error_code);
-        std::string custom_error(const std::string& status);
+        response_t dynamic_page(int status, bool config, Server &server);
+        std::string generate_page(const std::string& status);
         response_t check_request( void );
         std::string random_string( size_t length );
         bool location_match(std::string location, std::string path);

@@ -1,20 +1,7 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Client.cpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: heloufra <heloufra@student.1337.ma>        +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/05/24 17:44:51 by akhouya           #+#    #+#             */
-/*   Updated: 2023/07/09 17:20:15 by heloufra         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-#include<iostream>
-#include<fstream>
-#include "Client.hpp"
+#include <iostream>
 #include <fstream>
-#include "ResourceHandler.hpp"
+#include "Client.hpp"
+
 
 
 void read_from_file(const std::string filename)
@@ -226,23 +213,31 @@ void Client::save_body(std::string &buffer, int &close_conn) {
 }
 
 bool Client::response() {
-  
-    response_t response = ResourceHandler(_config, *this).handle_request();
+    bool close_con = false;
     std::string str = "";
-    char buffer[6000] = {0};
-    str += response.headers;
-    if (response.body ) {
-        std::cout << "client : response : " << response.body_file << std::endl;
-        int rc = read(response.body_file, buffer, 6000);
-        std::cout << "client : buffer : " << rc <<buffer << std::endl;
+    char buffer[CHUNKED_SIZE] = {0};
+
+    if (_response.init == false)
+        _response = ResourceHandler(_config, *this).handle_request();
+ 
+    str += _response.headers;
+    if (_response.body) {
+        int rc = read(_response.body_file, buffer, CHUNKED_SIZE);
+        if (rc == -1)
+        {
+            std::cout << "error read" << std::endl;
+            return true;
+        }
+        if (rc == 0)
+            close_con = true;
         str += std::string(buffer);
     }
-    
-  
+
     std::cout << "-------------------------------------" << std::endl;
     std::cout << str << std::endl;
     std::cout << "-------------------------------------" << std::endl;
     send(_sock, str.c_str(), str.size(), 0);
-    close(response.body_file);
+    if (close_con == true)
+        close(_response.body_file);
     return true;
 }
