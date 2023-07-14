@@ -72,8 +72,6 @@ static std::vector<std::string>    split_words(const std::string &str, char c) {
     words.push_back(str.substr(0, pos));
     
     words.push_back(str.substr(pos + 1));
-    std::cout << "words[0]: " << words[0] << std::endl;
-    std::cout << "words[1]: " << words[1] << std::endl;
     return words;
 }
 static std::string find_key(std::map<std::string, std::string> map, std::string key) {
