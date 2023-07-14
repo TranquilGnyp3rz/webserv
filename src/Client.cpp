@@ -3,23 +3,6 @@
 #include "Client.hpp"
 
 
-
-void read_from_file(const std::string filename)
-{
-    std::cout << "read from file" << std::endl;
-    std::ifstream file(filename); 
-    if (file.is_open()) {
-        std::string line;
-        while (std::getline(file, line)) {
-            // Process each line from the file
-            std::cout << line << std::endl;
-        }
-        
-        file.close();
-    } else {
-        std::cout << "Unable to open the file." << std::endl;
-    }
-}
 std::string generate_filename() {
     std::string filename = "/tmp/";
     std::string charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
@@ -142,6 +125,13 @@ void Client::parse_request() {
             _request.headers.insert(std::pair<std::string, std::string>((vectors.at(0)), vectors.at(1)));
         }
     }
+    if (_request.headers.find("Referer") != _request.headers.end())
+    {
+        std::string referer = _request.headers.find("Referer")->second;
+        referer = referer.substr(referer.find("://") + 3, referer.size() - 1);
+        referer = referer.substr(referer.find("/"), referer.size() - 1);
+        _request.headers.find("Referer")->second = referer + _request.path;
+    }
 }
 
 
@@ -227,6 +217,7 @@ void Client::save_body(std::string &buffer, int &close_conn) {
 }
 
 bool Client::response() {
+    static bool first = true;
     bool close_con = false;
     std::string str = "";
     char buffer[CHUNKED_SIZE] = {0};
@@ -249,7 +240,14 @@ bool Client::response() {
         }
         else
         {
-            str += to_hex(rc) + "\r\n" + std::string(buffer) + "\r\n";
+            if (first == true)
+            {
+                str += to_hex(rc) + "\r\n" + std::string(buffer) + "\r\n";
+                first = false;
+            }
+            else
+                str = to_hex(rc) + "\r\n" + std::string(buffer) + "\r\n";
+            
         }
     }
 
@@ -259,7 +257,7 @@ bool Client::response() {
     send(_sock, str.c_str(), str.size(), 0);
     if (close_con == true)
         close(_response.body_file);
-    return true;
+    return close_con;
 }
 
 std::string Client::to_hex(int nm) {
