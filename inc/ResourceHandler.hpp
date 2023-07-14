@@ -40,6 +40,7 @@ class ResourceHandler {
         
         response_t dynamic_page(int status, bool config, Server &server);
         std::string generate_page(const std::string& status);
+        std::string generate_headers(std::string status, std::string method, std::string request_target);
         response_t check_request( void );
         std::string random_string( size_t length );
         bool location_match(std::string location, std::string path);

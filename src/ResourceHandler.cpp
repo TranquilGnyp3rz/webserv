@@ -46,6 +46,7 @@ ResourceHandler::ResourceHandler(Config &config, Client &client) : _client(clien
 
     this->_mimeTypes["aac"] = "audio/aac";
     this->_mimeTypes["abw"] = "application/x-abiword";
+
     this->_mimeTypes["arc"] = "application/octet-stream";
     this->_mimeTypes["avi"] = "video/x-msvideo";
     this->_mimeTypes["azw"] = "application/vnd.amazon.ebook";
@@ -150,6 +151,13 @@ response_t ResourceHandler::handle_method(Server &server, Location &location) {
     if (_client.get_request().method == "GET") {
         if (location.isMethodAllowed("GET") == false)
             return dynamic_page(405, true, server);
+        else if (location.get_redirection() != "") {
+            response_t response;
+            response.init = true;
+            response.body = false;
+            response.headers = "HTTP/1.1 301 Moved Permanently\r\nLocation: " + location.get_redirection() + "\r\n\r\n";
+            return response;
+        }
         return get_file(server, location);
     }
     else if (_client.get_request().method == "DELETE") {
@@ -236,9 +244,9 @@ response_t ResourceHandler::get_file(Server  &server, Location  &location) {
        if (access(index.c_str(), R_OK) != -1) {
             int fd = open(index.c_str(), O_RDONLY);
             if (fd == -1)
-                return dynamic_page(404, true, server);
+                return dynamic_page(500, true, server);
             response.body_file = fd;
-            response.headers = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\ncontent-length: " + std::to_string(get_file_size(fd)) + "\r\n\r\n";
+            response.headers = generate_headers("200", _client.get_request().method, index);
             return response;
         }
         else if (location.get_autoIndex() == "on") {
@@ -249,12 +257,13 @@ response_t ResourceHandler::get_file(Server  &server, Location  &location) {
         }
        }
 
-    file_path = location.get_root() + _client.get_request().path; 
+    file_path = location.get_root() + _client.get_request().path;
+    std::cout << "file_path: " << file_path << std::endl;
     int fd = open(file_path.c_str(), O_RDONLY);
     if (fd == -1)
-        return dynamic_page(404, true, server);
+        return dynamic_page(500, true, server);
     response.body_file = fd;
-    response.headers = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\ncontent-length: " + std::to_string(get_file_size(fd)) + "\r\n\r\n";
+    response.headers = generate_headers("200", _client.get_request().method, file_path);
     return response;
 }
 
@@ -303,7 +312,7 @@ response_t ResourceHandler::dynamic_page(int status, bool config, Server &server
                 if (fd == -1)
                     return dynamic_page(500, false, server);
                 response.body_file = fd;
-                response.headers = "HTTP/1.1 " + std::to_string(status) + " OK\r\nContent-Type: text/html\r\ncontent-length: " + std::to_string(get_file_size(fd)) + "\r\n\r\n";
+                response.headers = generate_headers(std::to_string(status), _client.get_request().method, filename);
                 return response;
             }
         }
@@ -409,3 +418,16 @@ std::string ResourceHandler::get_headers(std::map<std::string, std::string> &hea
     }
     return response_headers;
 }
+
+std::string ResourceHandler::generate_headers(std::string status, std::string method, std::string request_target) {
+    std::string headers = "HTTP/1.1 " + status + "\r\n";
+    headers += "Date: " + this->get_date() + "\r\n";
+    headers += "Server: webserv\r\n";
+    headers += "Content-Type: " + this->get_mime_type(request_target) + "\r\n";
+    headers += "Transfer-Encoding: chunked\r\n";
+    headers += "Last-Modified: " + this->get_last_modified(request_target) + "\r\n";
+    headers += "Connection: keep-alive\r\n";
+    headers += "\r\n";
+    return headers;
+}
+

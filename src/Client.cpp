@@ -229,8 +229,14 @@ bool Client::response() {
             return true;
         }
         if (rc == 0)
+        {
+            str = to_hex(rc) + "\r\n" + std::string(buffer) + "\r\n";
             close_con = true;
-        str += std::string(buffer);
+        }
+        else
+        {
+            str += to_hex(rc) + "\r\n" + std::string(buffer) + "\r\n";
+        }
     }
 
     std::cout << "-------------------------------------" << std::endl;
@@ -240,4 +246,18 @@ bool Client::response() {
     if (close_con == true)
         close(_response.body_file);
     return true;
+}
+
+std::string Client::to_hex(int nm) {
+    std::string hex = "0123456789abcdef";
+    std::string result;
+
+    if (nm == 0)
+        return "0";
+    while (nm > 0)
+    {
+        result = hex[nm % 16] + result;
+        nm /= 16;
+    }
+    return result;
 }
