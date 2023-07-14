@@ -1,10 +1,9 @@
 #ifndef RESPONSE_HPP
 #define RESPONSE_HPP
 
-typedef struct s_response
-{
+typedef struct s_response {
     std::string headers;
     int         body_file;
     bool        body;
-}               response_t;
+}   response_t;
 #endif 

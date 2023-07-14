@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Client.hpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: heloufra <heloufra@student.1337.ma>        +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/05/24 14:40:30 by akhouya           #+#    #+#             */
-/*   Updated: 2023/07/14 02:38:51 by heloufra         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
@@ -22,6 +10,7 @@
 #include "response.hpp"
 #include "SocketServer.hpp"
 #include "Config.hpp"
+
 #define CHUNKED_SIZE 4096
 
 class Client {
@@ -58,7 +47,6 @@ class Client {
             _request.first_body = first_body;
         }
         bool response();
-  
 };
 
 #endif

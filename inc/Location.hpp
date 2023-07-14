@@ -4,8 +4,7 @@
 #include <vector>
 #include <string>
 
-class Location
-{
+class Location {
     private:
         int                         _locationNumber;
         std::string                 _locationName;

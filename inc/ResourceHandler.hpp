@@ -1,5 +1,6 @@
 #ifndef RESOURCEHANDLER_HPP
 #define RESOURCEHANDLER_HPP
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -9,7 +10,6 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include <dirent.h>
 #include <stdio.h>
 #include "Config.hpp"
@@ -18,10 +18,7 @@
 #include "Client.hpp"
 #include "response.hpp"
 
-
-
-class ResourceHandler
-{
+class ResourceHandler {
     private:
         Client &_client;
         std::vector<Server> &_servers;
@@ -48,7 +45,6 @@ class ResourceHandler
     public:
         ResourceHandler(Config &config, Client &client);
         response_t handle_request();
-       
 };
 
 #endif

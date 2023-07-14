@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   SocketServer.hpp                                   :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: heloufra <heloufra@student.1337.ma>        +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/05/19 11:56:13 by akhouya           #+#    #+#             */
-/*   Updated: 2023/07/14 02:52:26 by heloufra         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef SOCKETSERVER_HPP
 #define SOCKETSERVER_HPP
 
@@ -25,8 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-class SocketServer
-{
+class SocketServer {
     private:
         sockaddr_in6 _address;
         int _sock;

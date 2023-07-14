@@ -1,20 +1,6 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   WebServer.cpp                                      :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: heloufra <heloufra@student.1337.ma>        +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/06/01 17:16:37 by heloufra          #+#    #+#             */
-/*   Updated: 2023/06/01 18:15:15 by heloufra         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "WebServer.hpp"
-#include "ResourceHandler.hpp"
 
-WebServer::WebServer(std::string config_file)
-{
+WebServer::WebServer(std::string config_file) : _config(){
     _config.Handle_configFile(config_file);
     for (int i = 0; i < _config.get_servers().size(); i++)
     {
@@ -24,21 +10,18 @@ WebServer::WebServer(std::string config_file)
     }
 }
 
-int find_sockets(std::vector<SocketServer> sockets, int sock)
-{
+int find_sockets(std::vector<SocketServer> sockets, int sock) {
     std::vector<SocketServer>::iterator it;
     for (it = sockets.begin(); it != sockets.end(); it++)
     {
         if (it->get_sock() == sock){
              return it->get_port();
-        }
-           
+        }     
     }
     return 1;
 }
 
-void WebServer::run()
-{
+void WebServer::run() {
     fd_set master_set;
     int max_sd, i;
     std::vector<SocketServer> sockets;
@@ -58,8 +41,7 @@ void WebServer::run()
     }
 }
 
-void WebServer::accepter(std::vector<SocketServer> &sockets, fd_set *master_set, int *max_sd)
-{
+void WebServer::accepter(std::vector<SocketServer> &sockets, fd_set *master_set, int *max_sd) {
     int new_sd, rc, i;
     int desc_ready, end_Webserver = false;
     fd_set working_set, response_set;
@@ -107,8 +89,7 @@ void WebServer::accepter(std::vector<SocketServer> &sockets, fd_set *master_set,
 
 
 
-void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response_set)
-{
+void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response_set) {
 
     // std::cout << "Discriptor " << i << "is readale" << std::endl;
 
@@ -170,8 +151,7 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response
 
 
 
-int WebServer::select_socket(fd_set *working_set, int max_sd, int *rc, fd_set *response_set)
-{
+int WebServer::select_socket(fd_set *working_set, int max_sd, int *rc, fd_set *response_set) {
 
     *rc = select(max_sd + 1, working_set, response_set, NULL, NULL);
     if (*rc < 0)
@@ -188,8 +168,7 @@ int WebServer::select_socket(fd_set *working_set, int max_sd, int *rc, fd_set *r
     return 0;
 }
 
-int WebServer::accept_socket(fd_set *working_set, int i, int *max_sd, int *new_sd, int *end_Webserver, fd_set *master_set, std::map<int, Client> &clients, int ports)
-{
+int WebServer::accept_socket(fd_set *working_set, int i, int *max_sd, int *new_sd, int *end_Webserver, fd_set *master_set, std::map<int, Client> &clients, int ports) {
     std::cout << " Listening socket is readable" << std::endl;
     *new_sd = accept(i, NULL, NULL);
     if (*new_sd < 0)
@@ -214,8 +193,7 @@ int WebServer::accept_socket(fd_set *working_set, int i, int *max_sd, int *new_s
 }
 
 
-int WebServer::find_socket(std::vector<SocketServer> sockets, int sock)
-{
+int WebServer::find_socket(std::vector<SocketServer> sockets, int sock) {
     std::vector<SocketServer>::iterator it;
     for (it = sockets.begin(); it != sockets.end(); it++)
     {
@@ -225,8 +203,7 @@ int WebServer::find_socket(std::vector<SocketServer> sockets, int sock)
     return 1;
 }
 
-int WebServer::find_client(std::vector<Client> _clients, int sock)
-{
+int WebServer::find_client(std::vector<Client> _clients, int sock) {
 
     for (int i = 0; i < _clients.size(); i++)
     {

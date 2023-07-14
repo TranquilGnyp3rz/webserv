@@ -1,7 +1,6 @@
 #include "ResourceHandler.hpp"
 
-ResourceHandler::ResourceHandler(Config &config, Client &client) : _client(client), _servers(config.get_servers())
-{
+ResourceHandler::ResourceHandler(Config &config, Client &client) : _client(client), _servers(config.get_servers()) {
 
     this->httpResponses.insert(std::make_pair(100, "100 Continue"));
     this->httpResponses.insert(std::make_pair(101, "101 Switching Protocols"));
@@ -114,8 +113,7 @@ ResourceHandler::ResourceHandler(Config &config, Client &client) : _client(clien
     }
 }
 
-response_t ResourceHandler::handle_request()
-{
+response_t ResourceHandler::handle_request() {
     // int fd; // = check_request();
     // response_t response;
 
@@ -138,8 +136,7 @@ response_t ResourceHandler::handle_request()
     return costum_error_page(404);
 }
 
-response_t ResourceHandler::handle_location(Server &server, std::vector<Location> &locations)
-{
+response_t ResourceHandler::handle_location(Server &server, std::vector<Location> &locations) {
     for (std::vector<Location>::iterator it = locations.begin(); it != locations.end(); it++)
     {
         if (location_match(it->get_locationName(), _client.get_request().path))
@@ -150,8 +147,7 @@ response_t ResourceHandler::handle_location(Server &server, std::vector<Location
     return costum_error_page(404);
 }
 
-response_t ResourceHandler::handle_method(Server &server, Location &location)
-{
+response_t ResourceHandler::handle_method(Server &server, Location &location) {
     if (_client.get_request().method == "GET") {
         if (location.isMethodAllowed("GET") == false)
             return costum_error_page(405);
@@ -166,16 +162,14 @@ response_t ResourceHandler::handle_method(Server &server, Location &location)
         return costum_error_page(405);
 }
 
-bool ResourceHandler::location_match(std::string location, std::string path)
-{
+bool ResourceHandler::location_match(std::string location, std::string path) {
     std::string tmp = path.substr(0, location.length());
     if (tmp == location && (path[location.length()] == '/' || path[location.length()] == '\0'))
         return true;
     return false;
 }
 
-response_t ResourceHandler::get_directory(Server  &server, Location  &location)
-{
+response_t ResourceHandler::get_directory(Server  &server, Location  &location) {
     std::string directoryPath = location.get_root() + location.get_locationName();
     std::string html;
     std::string htmlPath = "/tmp/" + random_string(10) + ".html";
@@ -226,8 +220,7 @@ response_t ResourceHandler::get_directory(Server  &server, Location  &location)
     return response; 
 }
 
-response_t ResourceHandler::get_file(Server  &server, Location  &location)
-{
+response_t ResourceHandler::get_file(Server  &server, Location  &location) {
     std::string file_path;
     response_t response;
     response.body = true;
@@ -274,8 +267,7 @@ response_t ResourceHandler::delete_file(Server  &server, Location  &location) {
 }
 
 
-response_t ResourceHandler::costum_error_page(int error_code)
-{
+response_t ResourceHandler::costum_error_page(int error_code) {
     response_t response;
     response.body = true;
     char buffer[60000] = {0};
@@ -337,8 +329,7 @@ std::string ResourceHandler::custom_error(const std::string& status) {
 //     return -1;
 // }
 
-std::string ResourceHandler::random_string( size_t length )
-{
+std::string ResourceHandler::random_string( size_t length ) {
     srand((unsigned) time(NULL) * getpid());
     char set[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
@@ -351,19 +342,14 @@ std::string ResourceHandler::random_string( size_t length )
     return str;
 }
 
-int ResourceHandler::get_file_size(int fd)
-{
+int ResourceHandler::get_file_size(int fd) {
     struct stat stat_buf;
-
-
-
 
     fstat(fd, &stat_buf);
     return stat_buf.st_size;
 }
 
-std::string ResourceHandler::get_mime_type(std::string path)
-{
+std::string ResourceHandler::get_mime_type(std::string path) {
     size_t pos = path.find_last_of(".");
 
     if (pos == std::string::npos)
@@ -375,8 +361,7 @@ std::string ResourceHandler::get_mime_type(std::string path)
     return mime_type;
 }
 
-std::string ResourceHandler::get_last_modified(std::string path)
-{
+std::string ResourceHandler::get_last_modified(std::string path) {
     struct stat attrib;
     std::string last_modified;
 
@@ -386,16 +371,14 @@ std::string ResourceHandler::get_last_modified(std::string path)
     return last_modified;
 }
 
-std::string ResourceHandler::get_date()
-{
+std::string ResourceHandler::get_date() {
     time_t now = time(0);
     std::string date = ctime(&now);
     date.erase(date.end() - 1);
     return date;
 }
 
-std::string ResourceHandler::get_headers(std::map<std::string, std::string> &headers)
-{
+std::string ResourceHandler::get_headers(std::map<std::string, std::string> &headers) {
     std::string response_headers;
 
     for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); it++)
