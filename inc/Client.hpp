@@ -12,7 +12,7 @@
 #include "ResourceHandler.hpp"
 #include "Config.hpp"
 
-#define CHUNKED_SIZE 4096
+#define CHUNKED_SIZE 60000
 
 class Client {
     private:

@@ -6,5 +6,7 @@ typedef struct s_response {
     int         body_file;
     bool        body;
     bool        init;
-}   response_t;
+    bool        head_done;
+    int         read_bytes;
+} response_t;
 #endif 

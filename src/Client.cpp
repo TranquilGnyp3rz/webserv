@@ -217,46 +217,45 @@ void Client::save_body(std::string &buffer, int &close_conn) {
 }
 
 bool Client::response() {
-    static bool first = true;
-    bool close_con = false;
+    char        buffer[CHUNKED_SIZE] = {0};
+    bool        close_con = false;
     std::string str = "";
-    char buffer[CHUNKED_SIZE] = {0};
+    int rc;
 
-    if (_response.init == false)
+    if (_response.init == false) {
         _response = ResourceHandler(_config, *this).handle_request();
- 
-    str += _response.headers;
-    if (_response.body) {
-        int rc = read(_response.body_file, buffer, CHUNKED_SIZE);
-        if (rc == -1)
-        {
-            std::cout << "error read" << std::endl;
-            return true;
-        }
-        if (rc == 0)
-        {
-            str = to_hex(rc) + "\r\n" + std::string(buffer) + "\r\n";
-            close_con = true;
-        }
-        else
-        {
-            if (first == true)
-            {
-                str += to_hex(rc) + "\r\n" + std::string(buffer) + "\r\n";
-                first = false;
-            }
-            else
-                str = to_hex(rc) + "\r\n" + std::string(buffer) + "\r\n";
-            
-        }
+        _response.head_done = false;
     }
 
-    std::cout << "-------------------------------------" << std::endl;
-    std::cout << str << std::endl;
-    std::cout << "-------------------------------------" << std::endl;
-    send(_sock, str.c_str(), str.size(), 0);
+    if ( _response.head_done == false) {
+        _response.head_done = true;
+        str = _response.headers;
+        send(_sock, str.c_str(), str.length(), 0);
+        if (_response.body)
+            return false;
+        return true;
+    }
+    
+    if ((rc = read(_response.body_file, buffer, CHUNKED_SIZE)) < 0)
+    {
+        if (errno != EWOULDBLOCK)
+        {
+            perror("read () failed");
+            return true;
+        }
+    }
+    if (rc == 0)
+    {
+        close_con = true;
+        str = "0\r\n\r\n";
+    }
+    else
+        str = to_hex(rc) + "\r\n" + std::string(buffer, rc) + "\r\n";
+  
+    send(_sock, str.c_str(), str.length(), 0);
     if (close_con == true)
         close(_response.body_file);
+    
     return close_con;
 }
 

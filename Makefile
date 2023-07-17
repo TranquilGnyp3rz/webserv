@@ -1,7 +1,7 @@
 NAME= webserv
 
 CC = c++
-FLAGS= -std=c++98 -fsanitize=address -g3
+FLAGS= -std=c++98
 PARA  = -c
 
 SRC_DIR = ./src/
@@ -13,10 +13,10 @@ OBJ= $(SRC:.cpp=.o)
 all: $(NAME)
 	
 $(NAME): $(OBJ)
-		@${CC} $(OBJ) -I./inc $(FLAGS) -o ${NAME} 
+		${CC} $(OBJ) -I./inc $(FLAGS) -o ${NAME} 
 
 %.o : %.cpp 
-	@$(CC) $(PARA) -I./inc $(FLAGS) $<  -o $@
+	$(CC) $(PARA) -I./inc $(FLAGS) $<  -o $@
 
 clean:
 	rm -rf $(OBJ)

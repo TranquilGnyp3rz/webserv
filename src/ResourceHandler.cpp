@@ -46,7 +46,6 @@ ResourceHandler::ResourceHandler(Config &config, Client &client) : _client(clien
 
     this->_mimeTypes["aac"] = "audio/aac";
     this->_mimeTypes["abw"] = "application/x-abiword";
-
     this->_mimeTypes["arc"] = "application/octet-stream";
     this->_mimeTypes["avi"] = "video/x-msvideo";
     this->_mimeTypes["azw"] = "application/vnd.amazon.ebook";
@@ -114,11 +113,7 @@ ResourceHandler::ResourceHandler(Config &config, Client &client) : _client(clien
 }
 
 response_t ResourceHandler::handle_request() {
-    // int fd; // = check_request();
-    // response_t response;
 
-    // if (fd != -1)
-    //     return fd;
     for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); it++)
     {
          if (it->get_server_name() == _client.get_request().headers["Host"] && _client.get_port() == it->get_port())
@@ -225,7 +220,7 @@ response_t ResourceHandler::get_directory(Server  &server, Location  &location) 
         return dynamic_page(500, true, server);
     }
     response.body_file = fd;
-    response.headers = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\ncontent-length: " + std::to_string(get_file_size(fd)) + "\r\n\r\n";
+    response.headers = generate_headers("200", _client.get_request().method, htmlPath);
     return response; 
 }
 
@@ -236,7 +231,8 @@ response_t ResourceHandler::get_file(Server  &server, Location  &location) {
     response.init = true;
     response.body = true;
     if (_client.get_request().path == location.get_locationName()) {
-        std::string index = location.get_root() + location.get_locationName() + "/";
+        std::string index = location.get_root() + location.get_locationName();
+        index += (index.back() == '/' )? "/" : "";
         if (location.get_index() != "")
             index += location.get_index();
         else
@@ -255,7 +251,7 @@ response_t ResourceHandler::get_file(Server  &server, Location  &location) {
         else {
             return dynamic_page(404, true, server);
         }
-       }
+    }
 
     file_path = location.get_root() + _client.get_request().path;
     std::cout << "file_path: " << file_path << std::endl;
@@ -268,15 +264,17 @@ response_t ResourceHandler::get_file(Server  &server, Location  &location) {
 }
 
 response_t ResourceHandler::delete_file(Server  &server, Location  &location) {
+    std::cout << "delete_file" << std::endl;
     std::string file_path = location.get_root() + _client.get_request().path;
     response_t response;
 
     response.init = true;
     response.body = false;
  
-    if (remove(file_path.c_str()) != 0)
-        return dynamic_page(404, true, server);
-    response.headers = "HTTP/1.1 204 OK\r\n\r\n";
+    if (std::remove(file_path.c_str()) != 0)
+        response.headers = "HTTP/1.1 404 OK\r\n\r\n";
+    else
+        response.headers = "HTTP/1.1 204 OK\r\n\r\n";
     return response;
 }
 
