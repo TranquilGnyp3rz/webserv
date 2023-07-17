@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <stdio.h>
+#include <sys/wait.h>
 #include "Config.hpp"
 #include "Server.hpp"
 #include "Location.hpp"
@@ -33,6 +34,8 @@ class ResourceHandler {
         response_t get_file(Server  &server, Location  &location);
         response_t get_directory(Server  &server, Location  &location);
         response_t delete_file(Server  &server, Location  &location);
+        response_t handler_cgi(Server  &server, Location  &location, std::string script_path);
+        int cgi_work(Server &server, Location  &location, std::string &cgi_path, std::map<std::string, std::string> &cgi_args);
         std::string get_mime_type(std::string path);
         std::string get_last_modified(std::string path);
         std::string get_date();

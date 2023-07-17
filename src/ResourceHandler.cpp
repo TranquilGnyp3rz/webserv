@@ -429,3 +429,78 @@ std::string ResourceHandler::generate_headers(std::string status, std::string me
     return headers;
 }
 
+response_t ResourceHandler::handler_cgi(Server  &server, Location  &location, std::string script_path)
+{
+    response_t response;
+    response.init = true;
+    response.body = true;
+
+    std::map<std::string, std::string>  cgi_args;
+    std::string cgi_path = script_path;
+    cgi_args["CONTENT_LENGTH"] = std::to_string(_client.get_request().body_lenght);
+    cgi_args["CONTENT_TYPE"] = _client.get_request().headers["Content-Type"];
+    cgi_args["GATEWAY_INTERFACE"] = "CGI/1.1";
+    cgi_args["REQUEST_METHOD"] = _client.get_request().method;
+    cgi_args["SERVER_PORT"] = std::to_string(server.get_port());
+    cgi_args["SERVER_PROTOCOL"] = _client.get_request().http_version;
+    response.body_file = cgi_work(server, location, cgi_path, cgi_args);
+    if (response.body_file == -1)
+        return dynamic_page(500, true, server);
+    response.head_done = true;    
+    return response;
+}
+
+int ResourceHandler::cgi_work(Server &server, Location  &location, std::string &cgi_path, std::map<std::string, std::string>  &cgi_args)
+{
+    std::string filename = "/tmp/" + random_string(10) ".cgi";
+    int pipe[2];
+    pid_t pid;
+    
+
+    if (pipe(pipe) == -1)
+        return -1;
+    pid = fork();
+
+    if (pid == 0)
+    {
+        dup2(pipe[0], 0);
+        dup2(pipe[1], 1);
+        char *env[] = new char *[cgi_args.size() + 1];
+        char *argv[] = new char *[2];
+        int i = 0;
+
+        for (std::map<std::string, std::string>::iterator it = cgi_args.begin(); it != cgi_args.end(); it++)
+        {
+            env[i] = new char[it->first.length() + it->second.length() + 2];
+            env[i][it->first.length() + it->second.length() + 1] = '\0';
+            strcpy(env[i], (it->first + "=" + it->second).c_str());
+            i++;
+        }
+        env[i] = NULL;
+        argv[0] = new char[cgi_path.length() + 1];
+        argv[0][cgi_path.length()] = '\0';
+        strcpy(argv[0], cgi_path.c_str());
+        argv[1] = NULL;
+
+        execve(argv[0], argv, env);
+        exit(1);
+    }
+    int in = open(_client.request.body_file, O_RDONLY);
+    if (in == -1)
+        return -1;
+    dup2(pipe[1], in);
+    int out = open(filename.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0644);
+    if (out == -1)
+        return -1;
+    char buffer[1024];
+
+    while (read(pipe[0], buffer, 1024) > 0)
+    {
+        write(out, buffer, strlen(buffer));
+    }
+    close(out);
+    close(pipe[0]);
+    int fd = open(filename.c_str(), O_RDONLY);
+    waitpid(pid, NULL, 0);
+    return fd;
+}
