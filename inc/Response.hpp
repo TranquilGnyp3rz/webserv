@@ -8,5 +8,9 @@ typedef struct s_response {
     bool        init;
     bool        head_done;
     int         read_bytes;
+    bool        cgi;
+    bool        cgi_response;
+    pid_t       cgi_pid;
+    std::string cgi_response_file_name;
 } response_t;
 #endif 

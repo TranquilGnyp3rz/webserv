@@ -179,6 +179,8 @@ response_t ResourceHandler::get_directory(Server  &server, Location  &location) 
     response_t response;
 
     response.init = true;
+    response.cgi_response = false;
+    response.cgi = false;
     DIR* dir;
     int fd;
     struct dirent* entry;
@@ -220,7 +222,7 @@ response_t ResourceHandler::get_directory(Server  &server, Location  &location) 
         return dynamic_page(500, true, server);
     }
     response.body_file = fd;
-    response.headers = generate_headers("200", _client.get_request().method, htmlPath);
+    response.headers = generate_headers("200", _client.get_request().method, htmlPath, fd);
     return response; 
 }
 
@@ -230,6 +232,8 @@ response_t ResourceHandler::get_file(Server  &server, Location  &location) {
 
     response.init = true;
     response.body = true;
+    response.cgi_response = false;
+    response.cgi = false;
     if (_client.get_request().path == location.get_locationName()) {
         std::string index = location.get_root() + location.get_locationName();
         index += (index.back() == '/' )? "/" : "";
@@ -242,7 +246,7 @@ response_t ResourceHandler::get_file(Server  &server, Location  &location) {
             if (fd == -1)
                 return dynamic_page(500, true, server);
             response.body_file = fd;
-            response.headers = generate_headers("200", _client.get_request().method, index);
+            response.headers = generate_headers("200", _client.get_request().method, index, fd);
             return response;
         }
         else if (location.get_autoIndex() == "on") {
@@ -258,8 +262,12 @@ response_t ResourceHandler::get_file(Server  &server, Location  &location) {
     int fd = open(file_path.c_str(), O_RDONLY);
     if (fd == -1)
         return dynamic_page(500, true, server);
+    if (to_cgi(file_path))
+    {
+        return handler_cgi(server, location, file_path);
+    }
     response.body_file = fd;
-    response.headers = generate_headers("200", _client.get_request().method, file_path);
+    response.headers = generate_headers("200", _client.get_request().method, file_path, fd);
     return response;
 }
 
@@ -284,6 +292,8 @@ response_t ResourceHandler::dynamic_page(int status, bool config, Server &server
 
     response.init = true;
     response.body = true;
+    response.cgi_response = false;
+    response.cgi = false;
     char buffer[60000] = {0};
     char filename[1024] = {0};
     int fd;
@@ -310,7 +320,7 @@ response_t ResourceHandler::dynamic_page(int status, bool config, Server &server
                 if (fd == -1)
                     return dynamic_page(500, false, server);
                 response.body_file = fd;
-                response.headers = generate_headers(std::to_string(status), _client.get_request().method, filename);
+                response.headers = generate_headers(std::to_string(status), _client.get_request().method, filename, fd);
                 return response;
             }
         }
@@ -417,90 +427,81 @@ std::string ResourceHandler::get_headers(std::map<std::string, std::string> &hea
     return response_headers;
 }
 
-std::string ResourceHandler::generate_headers(std::string status, std::string method, std::string request_target) {
+std::string ResourceHandler::generate_headers(std::string status, std::string method, std::string request_target, int fd) {
     std::string headers = "HTTP/1.1 " + status + "\r\n";
     headers += "Date: " + this->get_date() + "\r\n";
     headers += "Server: webserv\r\n";
     headers += "Content-Type: " + this->get_mime_type(request_target) + "\r\n";
-    headers += "Transfer-Encoding: chunked\r\n";
+    headers += "Content-Length: " + std::to_string(get_file_size(fd)) + "\r\n";
     headers += "Last-Modified: " + this->get_last_modified(request_target) + "\r\n";
-    headers += "Connection: keep-alive\r\n";
     headers += "\r\n";
     return headers;
 }
 
 response_t ResourceHandler::handler_cgi(Server  &server, Location  &location, std::string script_path)
 {
+  /**
+        * setup env variables
+        * open file for cgi output
+        * fork for cgi
+        * dup input for cgi
+        * 
+        * 
+        DOCUMENT_ROOT 	The root directory of your server
+        HTTP_COOKIE 	The visitor's cookie, if one is set
+        HTTP_HOST 	The hostname of the page being attempted
+        HTTP_REFERER 	The URL of the page that called your program
+        HTTP_USER_AGENT 	The browser type of the visitor
+        HTTPS 	"on" if the program is being called through a secure server
+        PATH 	The system path your server is running under
+        QUERY_STRING 	The query string (see GET, below)
+        REMOTE_ADDR 	The IP address of the visitor
+        REMOTE_HOST 	The hostname of the visitor (if your server has reverse-name-lookups on; otherwise this is the IP address again)
+        REMOTE_PORT 	The port the visitor is connected to on the web server
+        REMOTE_USER 	The visitor's username (for .htaccess-protected pages)
+        REQUEST_METHOD 	GET or POST
+        REQUEST_URI 	The interpreted pathname of the requested document or CGI (relative to the document root)
+        SCRIPT_FILENAME 	The full pathname of the current CGI
+        SCRIPT_NAME 	The interpreted pathname of the current CGI (relative to the document root)
+        SERVER_ADMIN 	The email address for your server's webmaster
+        SERVER_NAME 	Your server's fully qualified domain name (e.g. www.cgi101.com)
+        SERVER_PORT 	The port number your server is listening on
+        SERVER_SOFTWARE 	The server software you're using (e.g. Apache 1.3) 
+    **/
+    const char **env = set_cgi_envv(server, location, script_path);
     response_t response;
-    response.init = true;
-    response.body = true;
-
-    std::map<std::string, std::string>  cgi_args;
-    std::string cgi_path = script_path;
-    cgi_args["CONTENT_LENGTH"] = std::to_string(_client.get_request().body_lenght);
-    cgi_args["CONTENT_TYPE"] = _client.get_request().headers["Content-Type"];
-    cgi_args["GATEWAY_INTERFACE"] = "CGI/1.1";
-    cgi_args["REQUEST_METHOD"] = _client.get_request().method;
-    cgi_args["SERVER_PORT"] = std::to_string(server.get_port());
-    cgi_args["SERVER_PROTOCOL"] = _client.get_request().http_version;
-    response.body_file = cgi_work(server, location, cgi_path, cgi_args);
+    response.cgi = true;
+    response.cgi_response = true;
+    response.cgi_response_file_name = "/tmp/" + random_string(15) + ".cgi";
+    response.body_file = open(response.cgi_response_file_name.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0644);
     if (response.body_file == -1)
         return dynamic_page(500, true, server);
-    response.head_done = true;    
+    response.cgi_pid = fork();
+    if (response.cgi_pid == -1)
+        return dynamic_page(500, true, server);
+    if (response.cgi_pid == 0)
+    {
+        request_t request = _client.get_request();
+        int input_fd = open(request.body_file.c_str(), O_RDONLY);
+        if (input_fd == -1)
+            exit(1);
+        dup2(input_fd, STDIN_FILENO);
+        close(input_fd);
+        dup2(response.body_file, STDOUT_FILENO);
+        close(response.body_file);
+        
+    }
+    close(response.body_file);
     return response;
 }
 
-int ResourceHandler::cgi_work(Server &server, Location  &location, std::string &cgi_path, std::map<std::string, std::string>  &cgi_args)
+bool    ResourceHandler::to_cgi(std::string filepath)
 {
-    std::string filename = "/tmp/" + random_string(10) ".cgi";
-    int pipe[2];
-    pid_t pid;
-    
-
-    if (pipe(pipe) == -1)
-        return -1;
-    pid = fork();
-
-    if (pid == 0)
-    {
-        dup2(pipe[0], 0);
-        dup2(pipe[1], 1);
-        char *env[] = new char *[cgi_args.size() + 1];
-        char *argv[] = new char *[2];
-        int i = 0;
-
-        for (std::map<std::string, std::string>::iterator it = cgi_args.begin(); it != cgi_args.end(); it++)
-        {
-            env[i] = new char[it->first.length() + it->second.length() + 2];
-            env[i][it->first.length() + it->second.length() + 1] = '\0';
-            strcpy(env[i], (it->first + "=" + it->second).c_str());
-            i++;
-        }
-        env[i] = NULL;
-        argv[0] = new char[cgi_path.length() + 1];
-        argv[0][cgi_path.length()] = '\0';
-        strcpy(argv[0], cgi_path.c_str());
-        argv[1] = NULL;
-
-        execve(argv[0], argv, env);
-        exit(1);
-    }
-    int in = open(_client.request.body_file, O_RDONLY);
-    if (in == -1)
-        return -1;
-    dup2(pipe[1], in);
-    int out = open(filename.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0644);
-    if (out == -1)
-        return -1;
-    char buffer[1024];
-
-    while (read(pipe[0], buffer, 1024) > 0)
-    {
-        write(out, buffer, strlen(buffer));
-    }
-    close(out);
-    close(pipe[0]);
-    int fd = open(filename.c_str(), O_RDONLY);
-    waitpid(pid, NULL, 0);
-    return fd;
+    int i = filepath.rfind('.');
+    if (i == std::string::npos)
+        return false;
+    std::string ext = filepath.substr(i);
+    if (ext == ".py" || ext == ".php")
+        return true;
+    return false;
 }

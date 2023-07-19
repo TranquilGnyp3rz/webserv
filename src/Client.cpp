@@ -217,20 +217,42 @@ void Client::save_body(std::string &buffer, int &close_conn) {
 }
 
 bool Client::response() {
-    char        buffer[CHUNKED_SIZE] = {0};
-    bool        close_con = false;
+    int status, wait_return, rc;
+    char buffer[CHUNKED_SIZE] = {0};
     std::string str = "";
-    int rc;
 
     if (_response.init == false) {
         _response = ResourceHandler(_config, *this).handle_request();
         _response.head_done = false;
     }
 
+    if (_response.cgi_response)
+    {
+        if ((wait_return = waitpid(_response.cgi_pid, &status, WNOHANG)) == -1)
+        {
+            perror("waitpid");
+            return true;
+        }
+        else if (wait_return == 0)
+            return false;
+        else
+        {
+            _response.cgi_response = false;
+            _response.body_file = open(_response.cgi_response_file_name.c_str(), O_RDONLY);
+            if (_response.body_file == -1)
+            {
+                perror("open");
+                return true;
+            }
+        }
+        return false;   
+    }
+
     if ( _response.head_done == false) {
         _response.head_done = true;
         str = _response.headers;
         send(_sock, str.c_str(), str.length(), 0);
+        std::cout << "head : " << str << std::endl;
         if (_response.body)
             return false;
         return true;
@@ -246,17 +268,17 @@ bool Client::response() {
     }
     if (rc == 0)
     {
-        close_con = true;
-        str = "0\r\n\r\n";
-    }
-    else
-        str = to_hex(rc) + "\r\n" + std::string(buffer, rc) + "\r\n";
-  
-    send(_sock, str.c_str(), str.length(), 0);
-    if (close_con == true)
         close(_response.body_file);
-    
-    return close_con;
+        return true;
+    }
+
+    str = std::string(buffer, rc);
+    if (send(_sock, str.c_str(), str.length(), 0) < 0)
+    {
+        perror("send() failed");
+        return true;
+    }
+    return false;
 }
 
 std::string Client::to_hex(int nm) {
