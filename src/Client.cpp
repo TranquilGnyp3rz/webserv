@@ -11,7 +11,6 @@ std::string generate_filename() {
     {
         filename += charset[rand() % charset.length()];
     }
-    filename += ".txt";
     return filename;
 }
 void write_in_file(std::string filename, std::string buffer) {
@@ -77,6 +76,7 @@ Client::Client(Config &config, int port, int sock): _config(config){
     _port = port;
     _sock = sock;
     _buffer = "";
+    _bad_request = 0;
     _request.body_file = generate_filename() + std::to_string(_sock);
 }
 
@@ -125,11 +125,17 @@ void Client::parse_request() {
             _request.http_version.erase(_request.http_version.size() - 1);
             if (vectors.size() == 4 && vectors.at(3) == "")
                 vectors.pop_back();
-            if (vectors.size() != 3 || check_path(_request.path) == false || _request.http_version != "HTTP/1.1") {
+            if (vectors.size() != 3 || check_path(_request.path) == false) {
                 std::cout << "bad request" << std::endl;
-                _bad_request = true;
+                _bad_request = 400;
                 return ;
             }
+            if ( _request.http_version != "HTTP/1.1"){
+                std::cout << "bad request" << std::endl;
+                _bad_request = 505;
+                return ;
+            }
+                
             continue;
         }
         if (line == "\r")
@@ -160,22 +166,38 @@ void Client::parse_request() {
 void Client::save_body(std::string &buffer, int &close_conn) {
 
     std::string body(buffer);
-    if (find_key(_request.headers, "Content-Length") != "")
-        {
-            int size = std::stoi(find_key(_request.headers, "Content-Length"));
-            if (_request.body_lenght  < size) {
-                write_in_file(_request.body_file, body.substr(0, size - _request.body_lenght));
-                std::ifstream in_file(_request.body_file, std::ios::binary);
-                in_file.seekg(0, std::ios::end);
-                int file_size = in_file.tellg();
-                _request.body_lenght = file_size;
-            }
-            if (_request.body_lenght == size) {
-                close_conn = true;
-            }
-        }
-    else if(find_key(_request.headers, "Transfer-Encoding") == "chunked")
+    std::map<std::string, std::string>::iterator it =_request.headers.find("Content-Length");
+    std::map<std::string, std::string>::iterator it2 = _request.headers.find("Transfer-Encoding");
+    if (it != _request.headers.end())
     {
+        int size = 0;
+        try {
+            size = std::stoi(it->second);
+        }
+        catch(...) {
+            std::cout << "bad request" << std::endl;
+            _bad_request = 400;
+            return ;
+        }
+        if (_request.body_lenght  < size) {
+            write_in_file(_request.body_file, body.substr(0, size - _request.body_lenght));
+            std::ifstream in_file(_request.body_file, std::ios::binary);
+            in_file.seekg(0, std::ios::end);
+            int file_size = in_file.tellg();
+            _request.body_lenght = file_size;
+        }
+        if (_request.body_lenght == size) {
+            close_conn = true;
+        }
+    }
+    else if(it2 != _request.headers.end())
+    {
+        if (it2->second != "chunked")
+        {
+            std::cout << "bad request" << std::endl;
+            _bad_request = 501;
+            return ;
+        }
         if (_request.body_lenght != 0) {
             if (body.size() < _request.body_lenght + 2)
             {
@@ -206,8 +228,6 @@ void Client::save_body(std::string &buffer, int &close_conn) {
                 std::string::size_type pos = body.find("\r\n");
                 std::string size_str = body.substr(0, pos);
                 try {
-                    // std::cout << "size_str: " << size_str << std::endl;
-        
                     _request.body_lenght = std::stoi(size_str, 0, 16);
                 }
                 catch (std::exception &e) {

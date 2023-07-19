@@ -20,7 +20,7 @@ class Client {
         request_t       _request;
         response_t      _response;
         std::string     _buffer;
-        bool            _bad_request;
+        int            _bad_request;
         int             _port;
         int             _sock;
 
@@ -39,7 +39,7 @@ class Client {
         void  set_buffer(std::string buffer) {
             _buffer = buffer;
         }
-        bool get_bad_request(){
+        int get_bad_request(){
             return _bad_request;
         }
         bool get_first_body() {

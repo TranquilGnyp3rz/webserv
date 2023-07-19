@@ -122,7 +122,7 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response
     if (pos != std::string::npos)
     {
         it->second.parse_request();
-        if (it->second.get_bad_request() == true){
+        if (it->second.get_bad_request() != 0){
             close_conn = true;
         }
         else {
@@ -131,6 +131,8 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response
                 it->second.set_first_body(true);
             }
             it->second.save_body( buf, close_conn);
+            if (it->second.get_bad_request() != 0)
+                close_conn = true;
         }
         
     }
