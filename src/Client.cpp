@@ -77,7 +77,7 @@ Client::Client(Config &config, int port, int sock): _config(config){
     _port = port;
     _sock = sock;
     _buffer = "";
-    _request.body_file = generate_filename();
+    _request.body_file = generate_filename() + std::to_string(_sock);
 }
 
 request_t Client::get_request() {
@@ -92,7 +92,21 @@ std::string Client::get_buffer() {
 int Client::get_sock() {
     return _sock;
 }
+static bool check_path(std::string path) {
 
+    std::string charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/?#[]@!$&'()*+,;=%";
+    for (int i = 0; i < path.size(); i++)
+    {
+        if (charset.find(path[i]) == std::string::npos)
+            return false;
+    }
+    return true;
+}
+//print asci
+// for (int i = 0; i < rc; i++)
+// {
+//     std::cout << (int)buffer[i] << " ";
+// }
 void Client::parse_request() {
     std::vector<std::string> vectors;
     std::istringstream iss(_buffer);
@@ -104,10 +118,18 @@ void Client::parse_request() {
         if (firstline == false) {
             firstline = true;
             vectors = (split_wordss(line, ' '));
+            
             _request.method = vectors.at(0);
             _request.path = vectors.at(1);
             _request.http_version = vectors.at(2);
             _request.http_version.erase(_request.http_version.size() - 1);
+            if (vectors.size() == 4 && vectors.at(3) == "")
+                vectors.pop_back();
+            if (vectors.size() != 3 || check_path(_request.path) == false || _request.http_version != "HTTP/1.1") {
+                std::cout << "bad request" << std::endl;
+                _bad_request = true;
+                return ;
+            }
             continue;
         }
         if (line == "\r")

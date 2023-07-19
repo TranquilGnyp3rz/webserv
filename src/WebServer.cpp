@@ -73,7 +73,7 @@ void WebServer::accepter(std::vector<SocketServer> &sockets, fd_set *master_set,
             {
                 std::cout << "Discriptor " << i << "is writeable" << std::endl;
                 if (_clients.find(i)->second.response()) {
-                    // remove(_clients.find(i)->second.get_body_file().c_str());
+                    remove(_clients.find(i)->second.get_request().body_file.c_str());
                     std::cout << "close socket " << i << std::endl;
                     if (*max_sd == i)
                         *max_sd -= 1;
@@ -92,7 +92,7 @@ void WebServer::accepter(std::vector<SocketServer> &sockets, fd_set *master_set,
 void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response_set) {
 
     // std::cout << "Discriptor " << i << "is readale" << std::endl;
-
+    std::map<int, Client>::iterator it = _clients.find(i);
     int close_conn = false;
     int rc;
     char buffer[65536];
@@ -107,29 +107,32 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response
     }
     if (rc == 0)
     {
-
         std::cout << "Connection closed" << std::endl;
         close_conn = true;
     }
-    std::string body;
+
     std::string buf(buffer, rc);
     std::string::size_type pos;
 
-    _clients.find(i)->second.set_buffer(_clients.find(i)->second.get_buffer() + buf);
+    if (it->second.get_request().headerdone == false) {
+        it->second.set_buffer(_clients.find(i)->second.get_buffer() + buf);
+    }
 
-    pos = _clients.find(i)->second.get_buffer().find("\r\n\r\n");
+    pos = it->second.get_buffer().find("\r\n\r\n");
     if (pos != std::string::npos)
     {
-        _clients.find(i)->second.parse_request();
-        
-        if (_clients.find(i)->second.get_first_body() == false) {
-            body = _clients.find(i)->second.get_buffer().substr(pos + 4);
-            _clients.find(i)->second.set_first_body(true);
+        it->second.parse_request();
+        if (it->second.get_bad_request() == true){
+            close_conn = true;
         }
         else {
-            body = buf;
+            if (it->second.get_first_body() == false) {
+                buf = it->second.get_buffer().substr(pos + 4);
+                it->second.set_first_body(true);
+            }
+            it->second.save_body( buf, close_conn);
         }
-        _clients.find(i)->second.save_body( body, close_conn);
+        
     }
 
     if (close_conn)
