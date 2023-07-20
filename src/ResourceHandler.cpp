@@ -261,6 +261,7 @@ response_t ResourceHandler::get_file(Server  &server, Location  &location) {
     file_path = location.get_root() + _client.get_request().path;
     if (to_cgi(file_path))
     {
+       
         return handler_cgi(server, location, file_path);
     }
 
@@ -420,11 +421,14 @@ response_t ResourceHandler::handler_cgi(Server  &server, Location  &location, st
     response.cgi_response = true;
     response.head_done = true;
     response.cgi_response_file_name = "/tmp/" + random_string(15) + ".cgi";
+    
     response.body_file = open(response.cgi_response_file_name.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0644);
+    
     if (response.body_file == -1)
         return dynamic_page(500, true, server);
     
     response.cgi_pid = fork();
+    
     if (response.cgi_pid == -1)
         return dynamic_page(500, true, server);
     if (response.cgi_pid == 0)
