@@ -127,7 +127,7 @@ bool Location::isMethodAllowed(std::string method)
 
 bool Location::is_valid_location()
 {
-    if(_locationName.back() == '/')
+    if(_locationName.back() == '/' && _locationName.size() > 1)
         return false;
     size_t found = _locationName.find("//");
     if (found != std::string::npos) 
@@ -135,7 +135,7 @@ bool Location::is_valid_location()
     std::string charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/?#[]@!$&'()*+,;=%";
     for (int i = 0; i < _locationName.size(); i++)
     {
-        if (charset.find(_locationName[i]) != std::string::npos)
+        if (charset.find(_locationName[i]) == std::string::npos)
             return false;
     }
     return true;
