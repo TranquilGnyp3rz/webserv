@@ -115,12 +115,30 @@ bool Location::operator < (const Location &b) const
     return (_locationName < b._locationName);
 }
 
- bool Location::isMethodAllowed(std::string method)
- {
-    for (std::vector<std::string>::iterator it = _allowedMethods.begin(); it != _allowedMethods.end(); it++)
+bool Location::isMethodAllowed(std::string method)
+{
+   for (std::vector<std::string>::iterator it = _allowedMethods.begin(); it != _allowedMethods.end(); it++)
+   {
+       if (*it == method)
+           return true;
+   }
+   return false;
+}
+
+bool Location::is_valid_location()
+{
+    if(_locationName.back() == '/')
+        return false;
+    size_t found = _locationName.find("//");
+    if (found != std::string::npos) 
+        return false;
+    std::string charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/?#[]@!$&'()*+,;=%";
+    for (int i = 0; i < _locationName.size(); i++)
     {
-        if (*it == method)
-            return true;
+        if (charset.find(_locationName[i]) != std::string::npos)
+            return false;
     }
-    return false;
- }
+    return true;
+
+    
+}

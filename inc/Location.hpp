@@ -41,6 +41,7 @@ class Location {
 
         bool operator < (const Location &b) const;
         bool isMethodAllowed(std::string method);
+        bool is_valid_location();
 
 };
 
