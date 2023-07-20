@@ -1,5 +1,6 @@
 #include "ResourceHandler.hpp"
 #include <cstring>
+
 ResourceHandler::ResourceHandler(Config &config, Client &client) : _client(client), _servers(config.get_servers()) {
 
     this->httpResponses.insert(std::make_pair(100, "100 Continue"));
@@ -150,6 +151,7 @@ response_t ResourceHandler::handle_method(Server &server, Location &location) {
             response_t response;
             response.init = true;
             response.body = false;
+            response.cgi_response = false;
             response.headers = "HTTP/1.1 301 Moved Permanently\r\nLocation: " + location.get_redirection() + "\r\n\r\n";
             return response;
         }
@@ -256,16 +258,16 @@ response_t ResourceHandler::get_file(Server  &server, Location  &location) {
             return dynamic_page(404, true, server);
         }
     }
-
     file_path = location.get_root() + _client.get_request().path;
-    std::cout << "file_path: " << file_path << std::endl;
-    int fd = open(file_path.c_str(), O_RDONLY);
-    if (fd == -1)
-        return dynamic_page(500, true, server);
     if (to_cgi(file_path))
     {
         return handler_cgi(server, location, file_path);
     }
+
+    int fd = open(file_path.c_str(), O_RDONLY);
+    if (fd == -1)
+        return dynamic_page(404, true, server);
+
     response.body_file = fd;
     response.headers = generate_headers("200", _client.get_request().method, file_path, fd);
     return response;
@@ -278,7 +280,7 @@ response_t ResourceHandler::delete_file(Server  &server, Location  &location) {
 
     response.init = true;
     response.body = false;
- 
+    response.cgi_response = false;
     if (std::remove(file_path.c_str()) != 0)
         response.headers = "HTTP/1.1 404 OK\r\n\r\n";
     else
@@ -410,9 +412,13 @@ std::string ResourceHandler::generate_headers(std::string status, std::string me
 response_t ResourceHandler::handler_cgi(Server  &server, Location  &location, std::string script_path)
 {
     response_t response;
-    
+    std::string path = script_path;
+
+    script_path = script_path.substr(0, script_path.find('?'));
+    std::cout << "script_path :" << script_path << std::endl;
     response.cgi = true;
     response.cgi_response = true;
+    response.head_done = true;
     response.cgi_response_file_name = "/tmp/" + random_string(15) + ".cgi";
     response.body_file = open(response.cgi_response_file_name.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0644);
     if (response.body_file == -1)
@@ -423,6 +429,7 @@ response_t ResourceHandler::handler_cgi(Server  &server, Location  &location, st
         return dynamic_page(500, true, server);
     if (response.cgi_pid == 0)
     {
+        std::cout << "cgi is forked " << std::endl;
         char **env = set_cgi_envv(server, location, script_path);
         char *bin = get_cgi_bin(server, location, script_path);
         const char *argv[] = { bin , script_path.c_str(), NULL};
@@ -437,7 +444,6 @@ response_t ResourceHandler::handler_cgi(Server  &server, Location  &location, st
         execve(bin, (char **)argv, (char **)env);
         exit(1);
     }
-    close(response.body_file);
     return response;
 }
 
@@ -477,8 +483,18 @@ char        * ResourceHandler::get_cgi_bin(Server &server, Location &location, s
 bool    ResourceHandler::to_cgi(std::string filepath)
 {
     int i = filepath.rfind('.');
+    int j = filepath.find('?');
     if (i == std::string::npos)
+    {
         return false;
+    }
+    if (j != std::string::npos)
+    {
+        std::string tmp = filepath.substr(0, j);
+        std::string ext = tmp.substr(i);
+        if (ext == ".py" || ext == ".php")
+            return true;
+    }
     std::string ext = filepath.substr(i);
     if (ext == ".py" || ext == ".php")
         return true;
