@@ -1,5 +1,5 @@
 #include "ResourceHandler.hpp"
-
+#include <cstring>
 ResourceHandler::ResourceHandler(Config &config, Client &client) : _client(client), _servers(config.get_servers()) {
 
     this->httpResponses.insert(std::make_pair(100, "100 Continue"));
@@ -336,39 +336,8 @@ std::string ResourceHandler::generate_page(const std::string& status) {
     return htmlPage;
 }
 
-// reponse_t ResourceHandler::check_request( void ) {
-//     request_t request = this->_client.get_request();
 
-//     if (request.headers.find("Transfer-Encoding") != request.headers.end())
-//     {
-//         if (request.headers["Transfer-Encoding"] != "chunked")
-//             return this->dynamic_page(501);
-//     }
-//     if (request.headers.find("Content-Length") != request.headers.end() && request.headers.find("Transfer-Encoding") != request.headers.end()
-//         && request.method == "POST")
-//     {
-//         return this->dynamic_page(400);
-//     }
-    // if (this->containsAnyChar(request.path, ALLOWED_URL_CHAR) == true)
-    // {
-    //     return this->dynamic_page(400);
-    // }
-//     if (request.method != "GET" && request.method != "POST" && request.method != "DELETE")
-//     {
-//         return this->dynamic_page(501);
-//     }
-//     if (request.http_version != "HTTP/1.1")
-//     {
-//         return this->dynamic_page(505);
-//     }
-//     if (request.path.size() > MAX_URL_SIZE)
-//     {
-//         return this->dynamic_page(4);
-//     }
-//     return -1;
-// }
-
-std::string ResourceHandler::random_string( size_t length ) {
+std::string ResourceHandler::random_string( size_t length) {
     srand((unsigned) time(NULL) * getpid());
     char set[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
@@ -440,47 +409,23 @@ std::string ResourceHandler::generate_headers(std::string status, std::string me
 
 response_t ResourceHandler::handler_cgi(Server  &server, Location  &location, std::string script_path)
 {
-  /**
-        * setup env variables
-        * open file for cgi output
-        * fork for cgi
-        * dup input for cgi
-        * 
-        * 
-        DOCUMENT_ROOT 	The root directory of your server
-        HTTP_COOKIE 	The visitor's cookie, if one is set
-        HTTP_HOST 	The hostname of the page being attempted
-        HTTP_REFERER 	The URL of the page that called your program
-        HTTP_USER_AGENT 	The browser type of the visitor
-        HTTPS 	"on" if the program is being called through a secure server
-        PATH 	The system path your server is running under
-        QUERY_STRING 	The query string (see GET, below)
-        REMOTE_ADDR 	The IP address of the visitor
-        REMOTE_HOST 	The hostname of the visitor (if your server has reverse-name-lookups on; otherwise this is the IP address again)
-        REMOTE_PORT 	The port the visitor is connected to on the web server
-        REMOTE_USER 	The visitor's username (for .htaccess-protected pages)
-        REQUEST_METHOD 	GET or POST
-        REQUEST_URI 	The interpreted pathname of the requested document or CGI (relative to the document root)
-        SCRIPT_FILENAME 	The full pathname of the current CGI
-        SCRIPT_NAME 	The interpreted pathname of the current CGI (relative to the document root)
-        SERVER_ADMIN 	The email address for your server's webmaster
-        SERVER_NAME 	Your server's fully qualified domain name (e.g. www.cgi101.com)
-        SERVER_PORT 	The port number your server is listening on
-        SERVER_SOFTWARE 	The server software you're using (e.g. Apache 1.3) 
-    **/
-    const char **env = set_cgi_envv(server, location, script_path);
     response_t response;
+    
     response.cgi = true;
     response.cgi_response = true;
     response.cgi_response_file_name = "/tmp/" + random_string(15) + ".cgi";
     response.body_file = open(response.cgi_response_file_name.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0644);
     if (response.body_file == -1)
         return dynamic_page(500, true, server);
+    
     response.cgi_pid = fork();
     if (response.cgi_pid == -1)
         return dynamic_page(500, true, server);
     if (response.cgi_pid == 0)
     {
+        char **env = set_cgi_envv(server, location, script_path);
+        char *bin = get_cgi_bin(server, location, script_path);
+        const char *argv[] = { bin , script_path.c_str(), NULL};
         request_t request = _client.get_request();
         int input_fd = open(request.body_file.c_str(), O_RDONLY);
         if (input_fd == -1)
@@ -489,10 +434,44 @@ response_t ResourceHandler::handler_cgi(Server  &server, Location  &location, st
         close(input_fd);
         dup2(response.body_file, STDOUT_FILENO);
         close(response.body_file);
-        
+        execve(bin, (char **)argv, (char **)env);
+        exit(1);
     }
     close(response.body_file);
     return response;
+}
+
+char       **ResourceHandler::set_cgi_envv(Server  &server, Location  &location, std::string script_path)
+{
+    std::map<std::string, std::string> env_map = _client.get_request().headers;
+
+    env_map["SERVER_SOFTWARE"] = "webserv";
+    env_map["SERVER_NAME"] = server.get_server_name();
+    env_map["GATEWAY_INTERFACE"] = "CGI/1.1";
+    env_map["SERVER_PROTOCOL"] = "HTTP/1.1";
+    env_map["SERVER_PORT"] = server.get_listen();
+    env_map["REQUEST_METHOD"] = _client.get_request().method;
+    env_map["PATH_INFO"] = _client.get_request().path;
+    env_map["PATH_TRANSLATED"] = script_path;
+    env_map["SCRIPT_NAME"] = script_path;
+    env_map["UPLOAD_DIR"] = server.get_uploadPath();
+    env_map["SCRIPT_FILENAME"] = script_path;
+
+    return convert_map_to_cgi_envv(env_map);
+}
+
+char        * ResourceHandler::get_cgi_bin(Server &server, Location &location, std::string script_path)
+{
+    std::vector<std::string> &_cgipath = server.get_cgipath();
+    std::vector<std::string> &_cgiext = server.get_cgiextension();
+    int i = script_path.rfind('.');
+    if (i == std::string::npos)
+        return nullptr;
+    std::string ext = script_path.substr(i);
+    if (std::find(_cgiext.begin(), _cgiext.end(), ext) == _cgiext.end())
+        return nullptr;
+    
+    return strdup(_cgipath[0].c_str());
 }
 
 bool    ResourceHandler::to_cgi(std::string filepath)
@@ -504,4 +483,27 @@ bool    ResourceHandler::to_cgi(std::string filepath)
     if (ext == ".py" || ext == ".php")
         return true;
     return false;
+}
+
+char        **ResourceHandler::convert_map_to_cgi_envv(std::map<std::string, std::string> &headers)
+{
+    char **env = new char*[headers.size() + 1];
+    int i = 0;
+
+    for (std::map< std::string, std::string>::iterator it; it != headers.end(); it++) {
+        std::string tmp = "HTTP_" + string_upper_copy(it->first) + "=" + string_upper_copy(it->second);
+        env[i] = new char[tmp.length() + 1];
+        strncpy(env[i], tmp.c_str(), tmp.length());
+        env[i][tmp.length()] = '\0';
+        i++; 
+    }
+    env[i] = nullptr;
+    return env;
+}
+
+std::string ResourceHandler::string_upper_copy(std::string str)
+{
+    std::string tmp = str;
+    std::transform(tmp.begin(), tmp.end(), tmp.begin(), ::toupper);
+    return tmp;
 }
