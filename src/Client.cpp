@@ -130,6 +130,12 @@ void Client::parse_request() {
                 _bad_request = 400;
                 return ;
             }
+            if (_request.method != "GET" || _request.method != "POST" || _request.method != "DELETE")
+            {
+                std::cout << "bad request" << std::endl;
+                _bad_request = 405;
+                return ;
+            }
             if ( _request.http_version != "HTTP/1.1"){
                 std::cout << "bad request" << std::endl;
                 _bad_request = 505;
