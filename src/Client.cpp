@@ -105,7 +105,7 @@ static bool check_path(std::string path) {
 //print asci
 // for (int i = 0; i < rc; i++)
 // {
-//     // std::cout << (int)buffer[i] << " ";
+//     // // std::cout << (int)buffer[i] << " ";
 // }
 void Client::parse_request() {
     std::vector<std::string> vectors;
@@ -126,18 +126,18 @@ void Client::parse_request() {
             if (vectors.size() == 4 && vectors.at(3) == "")
                 vectors.pop_back();
             if (vectors.size() != 3 || check_path(_request.path) == false) {
-                // std::cout << "bad request"  << std::endl;
+                // // std::cout << "bad request"  << std::endl;
                 _bad_request = 400;
                 return ;
             }
             if (_request.method != "GET" && _request.method != "POST" && _request.method != "DELETE")
             {
-                // std::cout << "bad request" << std::endl;
+                // // std::cout << "bad request" << std::endl;
                 _bad_request = 405;
                 return ;
             }
             if ( _request.http_version != "HTTP/1.1"){
-                // std::cout << "bad request" << std::endl;
+                // // std::cout << "bad request" << std::endl;
                 _bad_request = 505;
                 return ;
             }
@@ -181,7 +181,7 @@ void Client::save_body(std::string &buffer, int &close_conn) {
             size = std::stoi(it->second);
         }
         catch(...) {
-            // std::cout << "bad request" << std::endl;
+            // // std::cout << "bad request" << std::endl;
 
             _bad_request = 400;
             return ;
@@ -201,7 +201,7 @@ void Client::save_body(std::string &buffer, int &close_conn) {
     {
         if (it2->second != "chunked")
         {
-            // std::cout << "bad request" << std::endl;
+            // // std::cout << "bad request" << std::endl;
             _bad_request = 501;
             return ;
         }
@@ -236,8 +236,8 @@ void Client::save_body(std::string &buffer, int &close_conn) {
                     _request.body_lenght = std::stoi(size_str, 0, 16);
                 }
                 catch (std::exception &e) {
-                    // std::cout << "error stoi" << std::endl;
-                    // std::cout << e.what() << std::endl;
+                    // // std::cout << "error stoi" << std::endl;
+                    // // std::cout << e.what() << std::endl;
                     close_conn = true;
                     break;
                 }
@@ -275,7 +275,7 @@ bool Client::response() {
 
     // if (_response.cgi_response == true)
     // {
-    //     // std::cout << "CGI waitpid" << std::endl;
+    //     // // std::cout << "CGI waitpid" << std::endl;
     //     if ((wait_return = waitpid(_response.cgi_pid, &status, WNOHANG)) == -1)
     //     {
     //         perror("waitpid");
@@ -287,9 +287,9 @@ bool Client::response() {
     //     {
     //         _response.cgi_response = false;
     //         // _response.body_file = open(_response.cgi_response_file_name.c_str(), O_RDONLY);
-    //         // std::cout << "Status code is : " << WEXITSTATUS(status) << std::endl;
-    //         // std::cout << "CGI response's file is ready to be read from " << std::endl;
-    //         // std::cout << "file name : " << _response.cgi_response_file_name << std::endl;
+    //         // // std::cout << "Status code is : " << WEXITSTATUS(status) << std::endl;
+    //         // // std::cout << "CGI response's file is ready to be read from " << std::endl;
+    //         // // std::cout << "file name : " << _response.cgi_response_file_name << std::endl;
     //         if (_response.body_file == -1)
     //         {
     //             perror("open");
@@ -303,15 +303,21 @@ bool Client::response() {
     if ( _response.head_done == false) {
         _response.head_done = true;
         str = _response.headers;
-        send(_sock, str.c_str(), str.length(), 0);
-        std::cout << str << _response.body << std::endl;
+        if ( send( _sock, str.c_str(), str.length(), 0) < 0)
+        {
+            perror("send() failed header");
+            return true;
+        }
+        // send(_sock, str.c_str(), str.length(), 0);
+        // if 
+        // std::cout << str << _response.body << std::endl;
         if (_response.body)
             return false;
         return true;
     }
     if ((rc = read(_response.body_file, buffer, CHUNKED_SIZE)) < 0)
     {
-        perror("read () failed");
+        perror("this read () failed");
         return true;
     }
     if (rc == 0)
@@ -321,7 +327,7 @@ bool Client::response() {
     }
 
     str = std::string(buffer, rc);
-    std::cout << str << std::endl;
+    // std::cout << str << std::endl;
     if (send(_sock, str.c_str(), str.length(), 0) < 0)
     {
         perror("send() failed");

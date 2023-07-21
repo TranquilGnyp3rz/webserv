@@ -62,8 +62,8 @@ void SocketServer::connect_to_network(int sock) {
     memset(&addr, 0, sizeof(addr));
     addr.sin_family    = AF_INET;
     // memcpy(&addr.sin_addr, &inaddr_any, sizeof(inaddr_any));
-    // addr.sin_addr.s_addr = inet_addr("10.11.8.10");
-    inet_aton("10.11.8.10", &myaddr.sin_addr.s_addr);
+    addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    // inet_aton("127.0.0.1", &addr.sin_addr.s_addr);
     addr.sin_port  = htons(_port);
     rc = bind(sock, (struct sockaddr *)&addr, sizeof(addr));
 

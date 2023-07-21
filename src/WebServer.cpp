@@ -50,7 +50,7 @@ void WebServer::run() {
 
     for (i =0 ; i < _ports.size(); i++)
     {
-        sockets.push_back(SocketServer(AF_INET6, SOCK_STREAM, 0, _ports[i], INADDR_ANY));
+        sockets.push_back(SocketServer(AF_INET, SOCK_STREAM, 0, _ports[i], INADDR_ANY));
         max_sd = sockets[i].get_sock();
         FD_SET(sockets[i].get_sock(), &master_set);
     }
@@ -69,10 +69,11 @@ void WebServer::accepter(std::vector<SocketServer> &sockets, fd_set *master_set,
 
     memset(&working_set, 0, sizeof(working_set));
     memset(&response_set, 0, sizeof(response_set));
-    memcpy(&master_set_res, master_set, sizeof(*master_set));
-    while (end_Webserver == false)
+    memcpy(&master_set_res, master_set, sizeof(response_set));
+    while (true)
     {
-
+        memset(&working_set, 0, sizeof(working_set));
+        memset(&response_set, 0, sizeof(response_set));
         memcpy(&working_set, master_set, sizeof(*master_set));
         memcpy(&response_set, &master_set_res, sizeof(master_set_res));
         // std::cout << "Waiting on select()..." << std::endl;
@@ -92,14 +93,14 @@ void WebServer::accepter(std::vector<SocketServer> &sockets, fd_set *master_set,
                 else
                     handler(i, master_set, max_sd, &master_set_res);
             }
-            if (FD_ISSET(i , &response_set))
+            else if (FD_ISSET(i , &response_set))
             {
                 
 
                 // std::cout << "Discriptor " << i << "is writeable" << std::endl;
                 if (_clients.find(i)->second.response()) {
                     remove(_clients.find(i)->second.get_request().body_file.c_str());
-                    std::cout << "close socket " << i << std::endl;
+                    // std::cout << "close socket " << i << std::endl;
                     if (*max_sd == i)
                         *max_sd -= 1;
                     FD_CLR(i, &master_set_res);
@@ -194,7 +195,7 @@ int WebServer::select_socket(fd_set *working_set, int max_sd, int *rc, fd_set *r
 }
 
 int WebServer::accept_socket(fd_set *working_set, int i, int *max_sd, int *new_sd, int *end_Webserver, fd_set *master_set, std::map<int, Client> &clients, int ports) {
-    std::cout << " Listening socket is readable" << std::endl;
+    // std::cout << " Listening socket is readable" << std::endl;
     struct sockaddr_in add;
     socklen_t addr_len = sizeof(struct sockaddr_in);
     *new_sd = accept(i, (struct sockaddr *) &add, &addr_len);
