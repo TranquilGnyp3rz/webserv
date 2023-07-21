@@ -44,7 +44,6 @@ ResourceHandler::ResourceHandler(Config &config, Client &client) : _client(clien
     this->httpResponses.insert(std::make_pair(504, "504 Gateway Timeout"));
     this->httpResponses.insert(std::make_pair(505, "505 HTTP Version Not Supported"));
 
-
     this->_mimeTypes["aac"] = "audio/aac";
     this->_mimeTypes["abw"] = "application/x-abiword";
     this->_mimeTypes["arc"] = "application/octet-stream";
@@ -106,13 +105,6 @@ ResourceHandler::ResourceHandler(Config &config, Client &client) : _client(clien
     this->_mimeTypes["3g2"] = "video/3gpp2";
     this->_mimeTypes["audio/3gpp2"] = "audio/3gpp2";
     this->_mimeTypes["7z"] = "application/x-7z-compressed";
-    
-
-    for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); it++)
-    {
-        it->sort_locations();
-    }
-
 }
 
 response_t ResourceHandler::handle_request() {
@@ -132,9 +124,8 @@ response_t ResourceHandler::handle_location(Server &server, std::vector<Location
     {
         if (location_match(it->get_locationName(), _client.get_request().path))
         {
-             _target = it->get_root() + '/';
-             _target += _client.get_request().path.substr(it->get_locationName().length(), _client.get_request().path.length());
-             std::cout << "Target : " << _target << std::endl;
+            /* root path + target file or dir */
+             _target = it->get_root() + '/' + _client.get_request().path.substr(it->get_locationName().length(), _client.get_request().path.length());
              return handle_method(server, *it);
         }
     }
@@ -174,7 +165,7 @@ response_t ResourceHandler::handle_method(Server &server, Location &location) {
         else
             return delete_file(server, location);
     }
-
+    /* Add post Condition */
     return dynamic_page(405, true, server);
 }
 
@@ -188,9 +179,9 @@ response_t ResourceHandler::get_file(Server &server, Location &location) {
     if (stat(_target.c_str(),&s) != 0){
         return dynamic_page(404, true, server);
     }
-    std::cout << "target : " << _target << std::endl;
+    
+    /* If the target is a directory */
     if (s.st_mode & S_IFDIR) {
-        std::cout << "Is directory" << std::endl;
         std::string index = _target;
         if (location.get_index() != "")
         {
@@ -227,6 +218,7 @@ response_t ResourceHandler::get_file(Server &server, Location &location) {
             return dynamic_page(404, true, server);
         }
     }
+
     if (access(_target.c_str(), R_OK) == -1)
         return dynamic_page(404, true, server);
 
