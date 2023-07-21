@@ -95,7 +95,7 @@ int Client::get_sock() {
 static bool check_path(std::string path) {
 
     std::string charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/?#[]@!$&'()*+,;=%";
-    for (int i = 0; i < path.size(); i++)
+    for (size_t i = 0; i < path.size(); i++)
     {
         if (charset.find(path[i]) == std::string::npos)
             return false;
@@ -206,7 +206,7 @@ void Client::save_body(std::string &buffer, int &close_conn) {
             return ;
         }
         if (_request.body_lenght != 0) {
-            if (body.size() < _request.body_lenght + 2)
+            if (body.size() < (size_t) (_request.body_lenght + 2))
             {
                 write_in_file(_request.body_file, body);
                 _request.body_lenght -= body.size();
@@ -229,9 +229,7 @@ void Client::save_body(std::string &buffer, int &close_conn) {
                 body = "";
             }
             while ( body.find("\r\n") != std::string::npos)
-            {
-                int size = 0;
-                    
+            {       
                 std::string::size_type pos = body.find("\r\n");
                 std::string size_str = body.substr(0, pos);
                 try {
@@ -249,7 +247,7 @@ void Client::save_body(std::string &buffer, int &close_conn) {
                     break;
                 }
                 body = body.substr(pos + 2);
-                if (body.size() < _request.body_lenght + 2)
+                if (body.size() < (size_t) (_request.body_lenght + 2))
                 {
                     write_in_file(_request.body_file, body);
                     _request.body_lenght -= body.size();
