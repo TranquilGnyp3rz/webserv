@@ -119,17 +119,11 @@ response_t ResourceHandler::handle_request() {
 
     for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); it++)
     {
-        for (std::vector<Location>::iterator it2 = it->get_locations().begin(); it2 != it->get_locations().end(); it2++)
-        {
-            std::cout << "location :" << it2->get_locationName() << std::endl;
-        }
         if (it->get_server_name() + ":" + it->get_listen() == _client.get_request().headers["Host"] && _client.get_port() == it->get_port())
         {
             return handle_location(*it , it->get_locations());
         }
-        std::cout << "server name :" << _client.get_request().headers["Host"] << std::endl;
     }
-    std::cout << "no server found" << std::endl;
     return dynamic_page(404, false, _servers[0]);
 }
 
@@ -138,19 +132,19 @@ response_t ResourceHandler::handle_location(Server &server, std::vector<Location
     {
         if (location_match(it->get_locationName(), _client.get_request().path))
         {
-             _target = it->get_root();
+             _target = it->get_root() + '/';
              _target += _client.get_request().path.substr(it->get_locationName().length(), _client.get_request().path.length());
+             std::cout << "Target : " << _target << std::endl;
              return handle_method(server, *it);
         }
     }
-    std::cout << "no location found" << std::endl;
     return dynamic_page(404, true, server);
 }
 
 bool ResourceHandler::location_match(std::string location, std::string path) {
     std::string tmp = path.substr(0, location.length());
-    std::cout << "location :" << location << std::endl;
-    std::cout << "path :" << path << std::endl;
+    if (tmp == location && path[location.length() - 1 ] == '/')
+        return true;
     if (tmp == location && (path[location.length()] == '/' || path[location.length()] == '\0'))
             return true;
     return false;
@@ -247,20 +241,20 @@ response_t ResourceHandler::get_file(Server &server, Location &location) {
 }
 
 response_t ResourceHandler::get_directory(Server  &server, Location  &location) {
-    std::string directoryPath = get_filepath(server, location, _client.get_request().path);
     std::string html;
     std::string htmlPath = "/tmp/" + random_string(15) + ".html";
     std::vector<std::string> files;
     response_t response;
 
     response.init = true;
+    response.body = true;
     response.cgi_response = false;
 
     DIR* dir;
     int fd;
     struct dirent* entry;
 
-    dir = opendir(directoryPath.c_str());
+    dir = opendir(_target.c_str());
     if (dir != nullptr) {
         while ((entry = readdir(dir)) != nullptr) {
             if (std::string(entry->d_name) != "." && std::string(entry->d_name) != "..") {
@@ -278,7 +272,18 @@ response_t ResourceHandler::get_directory(Server  &server, Location  &location) 
     html += "<h1>Autoindex</h1>\n";
     html += "<ul>\n";
     for (std::vector<std::string>::iterator it = files.begin(); it != files.end(); it++) {
-        html += "<li><a href=\"" + location.get_locationName() + _target.substr(location.get_root().length()) + "/" + *it + "\">" +  *it + "</a></li>\n";
+        if (location.get_locationName() == "/")
+        {
+            html += "<li><a href=\"" +  _target.substr(location.get_root().length() + 1) + "/" + *it + "\">" +  *it + "</a></li>\n";
+            std::string print = "<li><a href=\"" +  _target.substr(location.get_root().length() + 1) + "/" + *it + "\">" +  *it + "</a></li>\n";
+            std::cout << print << std::endl;
+        }
+        else
+        {
+            html += "<li><a href=\"" + location.get_locationName() + _target.substr(location.get_root().length()) + "/" + *it + "\">" +  *it + "</a></li>\n";
+             std::string print = "<li><a href=\"" +  _target.substr(location.get_root().length()) + "/" + *it + "\">" +  *it + "</a></li>\n";
+            std::cout << print << std::endl;
+        }
     }
     html += "</ul>\n";
     html += "</body>\n";
@@ -298,11 +303,11 @@ response_t ResourceHandler::get_directory(Server  &server, Location  &location) 
     }
     response.body_file = fd;
     response.headers = generate_headers("200", _client.get_request().method, htmlPath, fd);
-    return response; 
+    std::cout << "get dir done -------------------------" << std::endl;
+    return response;
 }
 
 response_t ResourceHandler::delete_file(Server  &server, Location  &location) {
-    std::string _target = get_filepath(server, location, _client.get_request().path);
     response_t response;
 
     response.init = true; 
