@@ -12,5 +12,6 @@ typedef struct s_response {
     bool        cgi_response;
     pid_t       cgi_pid;
     std::string cgi_response_file_name;
+    bool        finish ;
 } response_t;
 #endif 

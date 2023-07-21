@@ -264,15 +264,22 @@ void Client::save_body(std::string &buffer, int &close_conn) {
 }
 
 bool Client::response() {
-    int status, wait_return, rc;
+    int status, wait_return, rc = 0;
     bool close_con = false;
     char buffer[CHUNKED_SIZE] = {0};
     std::string str = "";
+
+
     if (_response.init == false) {
         _response = ResourceHandler(_config, *this).handle_request();
         _response.head_done = false;
+        _response.finish = false;
     }
-
+    if (_response.finish == true)
+    {
+        // std::cout << "this socket  is f " << _sock << std::endl;
+        return true;
+    }
     // if (_response.cgi_response == true)
     // {
     //     // // std::cout << "CGI waitpid" << std::endl;
@@ -303,7 +310,7 @@ bool Client::response() {
     if ( _response.head_done == false) {
         _response.head_done = true;
         str = _response.headers;
-        if ( send( _sock, str.c_str(), str.length(), 0) < 0)
+        if (send( _sock, str.c_str(), str.length(), 0) < 0)
         {
             perror("send() failed header");
             return true;
@@ -313,6 +320,7 @@ bool Client::response() {
         // std::cout << str << _response.body << std::endl;
         if (_response.body)
             return false;
+        _response.finish = true;
         return true;
     }
     if ((rc = read(_response.body_file, buffer, CHUNKED_SIZE)) < 0)
@@ -322,19 +330,21 @@ bool Client::response() {
     }
     if (rc == 0)
     {
+         _response.finish = true;
         close(_response.body_file);
         return true;
     }
 
     str = std::string(buffer, rc);
-    // std::cout << str << std::endl;   
+    // std::cout << str << std::endl;
     if (send(_sock, str.c_str(), str.length(), 0) < 0)
     {
-        perror("send() failed");
+        // perror("send() failed");
         return true;
     }
     if (rc < CHUNKED_SIZE)
     {
+         _response.finish = true;
         close(_response.body_file);
         return true;
     }

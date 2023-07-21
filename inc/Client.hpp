@@ -53,6 +53,9 @@ class Client {
             _request.first_body = first_body;
         }
         bool response();
+        response_t get_response() {
+            return _response;
+        }
 };
 
 #endif

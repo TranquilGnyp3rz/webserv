@@ -99,7 +99,7 @@ void WebServer::accepter(std::vector<SocketServer> &sockets, fd_set *master_set,
 
                 // std::cout << "Discriptor " << i << "is writeable" << std::endl;
                 if (_clients.find(i)->second.response()) {
-                    remove(_clients.find(i)->second.get_request().body_file.c_str());
+                    // remove(_clients.find(i)->second.get_request().body_file.c_str());
                     // std::cout << "close socket " << i << std::endl;
                     if (*max_sd == i)
                         *max_sd -= 1;
