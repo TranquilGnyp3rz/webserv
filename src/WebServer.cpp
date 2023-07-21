@@ -65,14 +65,16 @@ void WebServer::run() {
 void WebServer::accepter(std::vector<SocketServer> &sockets, fd_set *master_set, int *max_sd) {
     int new_sd, rc, i;
     int desc_ready, end_Webserver = false;
-    fd_set working_set, response_set;
+    fd_set working_set, response_set, master_set_res;
 
     memset(&working_set, 0, sizeof(working_set));
     memset(&response_set, 0, sizeof(response_set));
+    memcpy(&master_set_res, master_set, sizeof(*master_set));
     while (end_Webserver == false)
     {
 
         memcpy(&working_set, master_set, sizeof(*master_set));
+        memcpy(&response_set, &master_set_res, sizeof(master_set_res));
         // std::cout << "Waiting on select()..." << std::endl;
         if (select_socket(&working_set, *max_sd, &rc, &response_set) == -1)
             break;
@@ -88,19 +90,19 @@ void WebServer::accepter(std::vector<SocketServer> &sockets, fd_set *master_set,
                         break;
                 }
                 else
-                    handler(i, master_set, max_sd, &response_set);
+                    handler(i, master_set, max_sd, &master_set_res);
             }
             if (FD_ISSET(i , &response_set))
             {
                 
 
-                std::cout << "Discriptor " << i << "is writeable" << std::endl;
+                // std::cout << "Discriptor " << i << "is writeable" << std::endl;
                 if (_clients.find(i)->second.response()) {
                     remove(_clients.find(i)->second.get_request().body_file.c_str());
                     std::cout << "close socket " << i << std::endl;
                     if (*max_sd == i)
                         *max_sd -= 1;
-                    FD_CLR(i, &response_set);
+                    FD_CLR(i, &master_set_res);
                     close(i);
                     _clients.erase(i);
                 }
@@ -127,7 +129,7 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response
     }
     if (rc == 0)
     {
-        std::cout << "Connection closed" << std::endl;
+        // std::cout << "Connection closed" << std::endl;
         close_conn = true;
     }
 
@@ -159,7 +161,7 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response
 
     if (close_conn)
     {
-        std::cout << "  Connection closed "<< i << std::endl;
+        // std::cout << "  Connection closed "<< i << std::endl;
         FD_SET(i, response_set);
         FD_CLR(i, master_set);
         // if (i == *max_sd)
@@ -185,7 +187,7 @@ int WebServer::select_socket(fd_set *working_set, int max_sd, int *rc, fd_set *r
 
     if (*rc == 0)
     {
-        std::cout << "  select() timed out.  End program." << std::endl;
+        // std::cout << "  select() timed out.  End program." << std::endl;
         return -1;
     }
     return 0;
@@ -193,16 +195,21 @@ int WebServer::select_socket(fd_set *working_set, int max_sd, int *rc, fd_set *r
 
 int WebServer::accept_socket(fd_set *working_set, int i, int *max_sd, int *new_sd, int *end_Webserver, fd_set *master_set, std::map<int, Client> &clients, int ports) {
     std::cout << " Listening socket is readable" << std::endl;
-    *new_sd = accept(i, NULL, NULL);
+    struct sockaddr_in add;
+    socklen_t addr_len = sizeof(struct sockaddr_in);
+    *new_sd = accept(i, (struct sockaddr *) &add, &addr_len);
+    
     if (*new_sd < 0)
     {
         perror("  accept() failed");
         *end_Webserver = true;
         return -1;
     }
+    
     else
     {
-        std::cout << "  New incoming connection - " << *new_sd << std::endl;
+        fcntl(*new_sd, F_SETFL, O_NONBLOCK);
+        // std::cout << "  New incoming connection - " << *new_sd << std::endl;
         // ResourceHandler resource_handler(this->_config, );
         clients.insert(std::make_pair(*new_sd, Client(this->_config, ports, *new_sd)));
         FD_SET(*new_sd, master_set);

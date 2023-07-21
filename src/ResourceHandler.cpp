@@ -121,15 +121,15 @@ response_t ResourceHandler::handle_request() {
     {
         for (std::vector<Location>::iterator it2 = it->get_locations().begin(); it2 != it->get_locations().end(); it2++)
         {
-            std::cout << "location :" << it2->get_locationName() << std::endl;
+            // std::cout << "location :" << it2->get_locationName() << std::endl;
         }
          if (it->get_server_name() + ":" + it->get_listen() == _client.get_request().headers["Host"] && _client.get_port() == it->get_port())
          {
              return handle_location(*it , it->get_locations());
          }
-         std::cout << "server name :" << _client.get_request().headers["Host"] << std::endl;
+         // std::cout << "server name :" << _client.get_request().headers["Host"] << std::endl;
     }
-    std::cout << "no server found" << std::endl;
+    // std::cout << "no server found" << std::endl;
     return dynamic_page(404, false, _servers[0]);
 }
 
@@ -143,14 +143,14 @@ response_t ResourceHandler::handle_location(Server &server, std::vector<Location
              return handle_method(server, *it);
         }
     }
-    std::cout << "no location found" << std::endl;
+    // std::cout << "no location found" << std::endl;
     return dynamic_page(404, true, server);
 }
 
 bool ResourceHandler::location_match(std::string location, std::string path) {
     std::string tmp = path.substr(0, location.length());
-    std::cout << "location :" << location << std::endl;
-    std::cout << "path :" << path << std::endl;
+    // std::cout << "location :" << location << std::endl;
+    // std::cout << "path :" << path << std::endl;
     if (tmp == location && (path[location.length()] == '/' || path[location.length()] == '\0'))
             return true;
     return false;
@@ -194,9 +194,9 @@ response_t ResourceHandler::get_file(Server &server, Location &location) {
     if (stat(_target.c_str(),&s) != 0){
         return dynamic_page(404, true, server);
     }
-    std::cout << "target : " << _target << std::endl;
+    // std::cout << "target : " << _target << std::endl;
     if (s.st_mode & S_IFDIR) {
-        std::cout << "Is directory" << std::endl;
+        // std::cout << "Is directory" << std::endl;
         std::string index = _target;
         if (location.get_index() != "")
         {
@@ -214,9 +214,9 @@ response_t ResourceHandler::get_file(Server &server, Location &location) {
         if (_target.back() != '/')
             index += "/";
         index += "index.html";
-        std::cout << std::endl;
-        std::cout << "index :" << index << std::endl;
-        std::cout << std::endl;
+        // std::cout << std::endl;
+        // std::cout << "index :" << index << std::endl;
+        // std::cout << std::endl;
         if (access(index.c_str(), R_OK) != -1)
         {
             int fd = open(index.c_str(), O_RDONLY);
@@ -236,7 +236,7 @@ response_t ResourceHandler::get_file(Server &server, Location &location) {
     if (access(_target.c_str(), R_OK) == -1)
         return dynamic_page(404, true, server);
 
-    std::cout << "target : ------------------- " << _target << std::endl;
+    // std::cout << "target : ------------------- " << _target << std::endl;
     int fd = open(_target.c_str(), O_RDONLY);
     if (fd == -1)
         return dynamic_page(500, true, server);
@@ -336,10 +336,10 @@ response_t ResourceHandler::dynamic_page(int status, bool config, Server &server
         strncpy(filename, random.c_str() , random.length());
         fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0666);
         int writen = write(fd, buffer, strlen(buffer));
-        std::cout << "writen :" << writen <<  "buffer :" << buffer << std::endl;
+        // std::cout << "writen :" << writen <<  "buffer :" << buffer << std::endl;
         close(fd);
         fd = open(filename, O_RDONLY);
-        std::cout << "Resource : fd: " << fd << std::endl;
+        // std::cout << "Resource : fd: " << fd << std::endl;
         response.body_file = fd;
     } else {
         std::vector<std::pair<int, std::string> >::iterator it;
@@ -444,7 +444,7 @@ response_t ResourceHandler::handler_cgi(Server  &server, Location  &location, st
     std::string path = script_path;
 
     script_path = script_path.substr(0, script_path.find('?'));
-    std::cout << "script_path :" << script_path << std::endl;
+    // std::cout << "script_path :" << script_path << std::endl;
     response.cgi = true;
     response.cgi_response = true;
     response.head_done = true;
@@ -461,7 +461,7 @@ response_t ResourceHandler::handler_cgi(Server  &server, Location  &location, st
         return dynamic_page(500, true, server);
     if (response.cgi_pid == 0)
     {
-        std::cout << "cgi is forked " << std::endl;
+        // std::cout << "cgi is forked " << std::endl;
         char **env = set_cgi_envv(server, location, script_path);
         char *bin = get_cgi_bin(server, location, script_path);
         const char *argv[] = { bin , script_path.c_str(), NULL};
@@ -567,12 +567,12 @@ std::string ResourceHandler::get_filepath(Server &server, Location &location, st
     /*
         filepath should be according to the subject
     */
-    std::cout << std::endl;
-    std::cout << std::endl;
-    std::cout << std::endl;
-    std::cout << "requested_file :" << location.get_root() + requested_file << std::endl;
-    std::cout << std::endl;
-    std::cout << std::endl;
-    std::cout << std::endl;
+    // std::cout << std::endl;
+    // std::cout << std::endl;
+    // std::cout << std::endl;
+    // std::cout << "requested_file :" << location.get_root() + requested_file << std::endl;
+    // std::cout << std::endl;
+    // std::cout << std::endl;
+    // std::cout << std::endl;
     return location.get_root() + requested_file;
 }

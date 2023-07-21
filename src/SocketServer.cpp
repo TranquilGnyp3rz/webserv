@@ -1,6 +1,6 @@
 #include "SocketServer.hpp"
 
-
+#include <arpa/inet.h>
 SocketServer::SocketServer(int domain, int service, int protocol, int port, u_long interface) {
     _port = port;
     _domain = domain;
@@ -27,7 +27,7 @@ int SocketServer::get_connection() {
     return _connection;
 }
 
-struct sockaddr_in6 SocketServer::get_addr() {
+struct sockaddr_in SocketServer::get_addr() {
     return _address;
 }
 
@@ -56,13 +56,15 @@ int SocketServer::set_non_blocking(int sock) {
 
 void SocketServer::connect_to_network(int sock) {
 
-    struct sockaddr_in6 addr;
+    struct sockaddr_in addr;
    //bind socket to port
     int rc, on = 1;
     memset(&addr, 0, sizeof(addr));
-    addr.sin6_family    = AF_INET6;
-    memcpy(&addr.sin6_addr, &in6addr_any, sizeof(in6addr_any));
-    addr.sin6_port  = htons(_port);
+    addr.sin_family    = AF_INET;
+    // memcpy(&addr.sin_addr, &inaddr_any, sizeof(inaddr_any));
+    // addr.sin_addr.s_addr = inet_addr("10.11.8.10");
+    inet_aton("10.11.8.10", &myaddr.sin_addr.s_addr);
+    addr.sin_port  = htons(_port);
     rc = bind(sock, (struct sockaddr *)&addr, sizeof(addr));
 
 
@@ -71,7 +73,7 @@ void SocketServer::connect_to_network(int sock) {
         exit(-1);
     }
     //listen to socket
-    rc = listen(sock, 10);
+    rc = listen(sock, 32767);
     if (rc < 0)
     {
        perror("listen() failed");

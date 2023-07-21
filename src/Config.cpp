@@ -150,7 +150,7 @@ void Config::Parse_ConfigFile()
         /*-----------------------Found the keyword 'location' and '{'-----------------------*/
         else if (line_trimmed.substr(0, 8) == "location" && _serverBlock )
         {
-            // std::cout << "hell no" << std::endl;
+            // // std::cout << "hell no" << std::endl;
             if (line_trimmed.find('{') == std::string::npos)
                 print_error_exit("Missing { after location");
             _curlebracket.push('{');
@@ -479,45 +479,45 @@ std::vector<Server>& Config::get_servers()
 void Config::Print_vector()
 {
     for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); ++it)
-    {   std::cout << "----------------------------------------" << std::endl;
-        std::cout << "Servers : " << std::endl;
+    {   // std::cout << "----------------------------------------" << std::endl;
+        // std::cout << "Servers : " << std::endl;
         
-        std::cout << "listen : [" << it->get_listen() << "]" << std::endl;
-        std::cout << "host : [" << it->get_host() << "]" << std::endl;
-        std::cout << "server_name : [" << it->get_server_name() << "]" << std::endl;
-        std::cout << "index : [" << it->get_index() << "]" << std::endl;
-        std::cout << "client_max_body_size : [" << it->get_clientMaxBodySize() << "]" << std::endl;
-        std::cout << "upload_path : [" << it->get_uploadPath() << "]" << std::endl;
+        // std::cout << "listen : [" << it->get_listen() << "]" << std::endl;
+        // std::cout << "host : [" << it->get_host() << "]" << std::endl;
+        // std::cout << "server_name : [" << it->get_server_name() << "]" << std::endl;
+        // std::cout << "index : [" << it->get_index() << "]" << std::endl;
+        // std::cout << "client_max_body_size : [" << it->get_clientMaxBodySize() << "]" << std::endl;
+        // std::cout << "upload_path : [" << it->get_uploadPath() << "]" << std::endl;
         for (std::vector<std::string>::iterator itc = it->get_cgipath().begin(); itc != it->get_cgipath().end(); ++itc)
         {
-            std::cout << "cgi_path : [" << *itc << "]" << std::endl;
+            // std::cout << "cgi_path : [" << *itc << "]" << std::endl;
         }
 
         for (std::vector<std::string>::iterator itcx = it->get_cgiextension().begin(); itcx != it->get_cgiextension().end(); ++itcx)
         {
-            std::cout << "cgi_ext : [" << *itcx << "]" << std::endl;
+            // std::cout << "cgi_ext : [" << *itcx << "]" << std::endl;
         }
 
         for (std::vector<std::pair<int, std::string> >::iterator ite = it->get_error_pages().begin(); ite != it->get_error_pages().end(); ++ite)
         {
-            std::cout << "error_code : [" << ite->first << "] | " << "error_page : [" << ite->second << "]" << std::endl;
+            // std::cout << "error_code : [" << ite->first << "] | " << "error_page : [" << ite->second << "]" << std::endl;
         }
 
         for (std::vector<Location>::iterator itl = it->get_locations().begin(); itl != it->get_locations().end(); ++itl)
         {
-            std::cout << "----------------------------------------" << std::endl;
-            std::cout << "locationNumber : [" << itl->get_locationNumber() << "]" << std::endl;
-            std::cout << "locationName : [" << itl->get_locationName() << "]" << std::endl;
-            std::cout << "autoindex : [" << itl->get_autoIndex() << "]" << std::endl;
-            std::cout << "index : [" << itl->get_index() << "]" << std::endl;
-            std::cout << "root : [" << itl->get_root() << "]" << std::endl;
-            std::cout << "return : [" << itl->get_redirection() << "]" << std::endl;
-            std::cout << "allowed_methods : [";
+            // std::cout << "----------------------------------------" << std::endl;
+            // std::cout << "locationNumber : [" << itl->get_locationNumber() << "]" << std::endl;
+            // std::cout << "locationName : [" << itl->get_locationName() << "]" << std::endl;
+            // std::cout << "autoindex : [" << itl->get_autoIndex() << "]" << std::endl;
+            // std::cout << "index : [" << itl->get_index() << "]" << std::endl;
+            // std::cout << "root : [" << itl->get_root() << "]" << std::endl;
+            // std::cout << "return : [" << itl->get_redirection() << "]" << std::endl;
+            // std::cout << "allowed_methods : [";
             for(std::vector<std::string>::iterator itm = itl->get_allowedMethods().begin(); itm != itl->get_allowedMethods().end(); ++itm)
             {
-                std::cout << *itm << " ";
+                // std::cout << *itm << " ";
             }
-            std::cout << "]" << std::endl;
+            // std::cout << "]" << std::endl;
 
         }
     }
