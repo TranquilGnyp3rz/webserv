@@ -123,11 +123,11 @@ response_t ResourceHandler::handle_request() {
         {
             std::cout << "location :" << it2->get_locationName() << std::endl;
         }
-         if (it->get_server_name() + ":" + it->get_listen() == _client.get_request().headers["Host"] && _client.get_port() == it->get_port())
-         {
-             return handle_location(*it , it->get_locations());
-         }
-         std::cout << "server name :" << _client.get_request().headers["Host"] << std::endl;
+        if (it->get_server_name() + ":" + it->get_listen() == _client.get_request().headers["Host"] && _client.get_port() == it->get_port())
+        {
+            return handle_location(*it , it->get_locations());
+        }
+        std::cout << "server name :" << _client.get_request().headers["Host"] << std::endl;
     }
     std::cout << "no server found" << std::endl;
     return dynamic_page(404, false, _servers[0]);
@@ -300,7 +300,6 @@ response_t ResourceHandler::get_directory(Server  &server, Location  &location) 
     response.headers = generate_headers("200", _client.get_request().method, htmlPath, fd);
     return response; 
 }
-
 
 response_t ResourceHandler::delete_file(Server  &server, Location  &location) {
     std::string _target = get_filepath(server, location, _client.get_request().path);
