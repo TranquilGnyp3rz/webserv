@@ -317,6 +317,10 @@ bool Client::response() {
     }
     if ((rc = read(_response.body_file, buffer, CHUNKED_SIZE)) < 0)
     {
+        // check non blocking]
+        int errn = errno;
+        if (errn == EAGAIN || errn == EWOULDBLOCK)
+            return false;
         perror("this read () failed");
         return true;
     }
