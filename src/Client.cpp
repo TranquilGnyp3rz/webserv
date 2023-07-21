@@ -324,6 +324,11 @@ bool Client::response() {
         perror("this read () failed");
         return true;
     }
+    if (rc < CHUNKED_SIZE)
+    {
+        close(_response.body_file);
+        close_con = true;
+    }
     if (rc == 0)
     {
         close(_response.body_file);
