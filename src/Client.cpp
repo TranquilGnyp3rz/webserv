@@ -327,10 +327,15 @@ bool Client::response() {
     }
 
     str = std::string(buffer, rc);
-    // std::cout << str << std::endl;
+    // std::cout << str << std::endl;   
     if (send(_sock, str.c_str(), str.length(), 0) < 0)
     {
         perror("send() failed");
+        return true;
+    }
+    if (rc < CHUNKED_SIZE)
+    {
+        close(_response.body_file);
         return true;
     }
     return false;
