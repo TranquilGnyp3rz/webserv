@@ -133,7 +133,7 @@ bool Location::is_valid_location()
     if (found != std::string::npos) 
         return false;
     std::string charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/?#[]@!$&'()*+,;=%";
-    for (int i = 0; i < _locationName.size(); i++)
+    for (int i = 0; i < (int)_locationName.size(); i++)
     {
         if (charset.find(_locationName[i]) == std::string::npos)
             return false;

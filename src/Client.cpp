@@ -265,6 +265,7 @@ void Client::save_body(std::string &buffer, int &close_conn) {
 
 bool Client::response() {
     int status, wait_return, rc;
+    bool close_con = false;
     char buffer[CHUNKED_SIZE] = {0};
     std::string str = "";
     if (_response.init == false) {
@@ -303,6 +304,7 @@ bool Client::response() {
         _response.head_done = true;
         str = _response.headers;
         send(_sock, str.c_str(), str.length(), 0);
+        std::cout << str << _response.body << std::endl;
         if (_response.body)
             return false;
         return true;
@@ -319,6 +321,7 @@ bool Client::response() {
     }
 
     str = std::string(buffer, rc);
+    std::cout << str << std::endl;
     if (send(_sock, str.c_str(), str.length(), 0) < 0)
     {
         perror("send() failed");
