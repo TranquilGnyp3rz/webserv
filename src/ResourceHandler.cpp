@@ -171,6 +171,7 @@ response_t ResourceHandler::handle_method(Server &server, Location &location) {
             return response;
         }
         return get_file(server, location);
+        
     }
     else if (_client.get_request().method == "DELETE") {
         struct stat s;
@@ -244,6 +245,10 @@ response_t ResourceHandler::get_file(Server &server, Location &location) {
 
     response.body_file = fd;
     response.headers = generate_headers("200", _client.get_request().method, _target, fd);
+    //check file extension
+    //if file extension matches the cgi extension----->run cgi on file
+    //esle return file
+
     return response;
 }
 

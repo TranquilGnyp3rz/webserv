@@ -269,7 +269,6 @@ bool Client::response() {
     char buffer[CHUNKED_SIZE] = {0};
     std::string str = "";
 
-
     if (_response.init == false) {
         _response = ResourceHandler(_config, *this).handle_request();
         _response.head_done = false;
