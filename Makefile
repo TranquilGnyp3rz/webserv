@@ -1,7 +1,7 @@
 NAME= webserv
 
 CC = c++
-FLAGS= -std=c++98
+FLAGS= -std=c++98 #-Wall -Wextra -Werror
 PARA  = -c
 
 SRC_DIR = ./src/

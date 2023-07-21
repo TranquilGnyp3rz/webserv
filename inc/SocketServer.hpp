@@ -14,7 +14,7 @@
 
 class SocketServer {
     private:
-        sockaddr_in6 _address;
+        sockaddr_in _address;
         int _sock;
         int _connection;
         int _port;
@@ -24,7 +24,7 @@ class SocketServer {
         SocketServer(int domain, int service, int protocol, int port, u_long interface);
         void connect_to_network(int sock);
         void test_connection(int);
-        struct sockaddr_in6 get_addr();
+        struct sockaddr_in get_addr();
         int get_sock();
         int get_port();
         int get_connection();
