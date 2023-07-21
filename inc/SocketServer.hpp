@@ -7,7 +7,6 @@
 #include <fcntl.h>
 #include <vector>
 #include <sys/ioctl.h>
-#include <errno.h>
 #include <unistd.h>
 #include <iostream>
 #include <stdio.h>
