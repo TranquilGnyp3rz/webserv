@@ -29,6 +29,7 @@ class ResourceHandler {
         std::map<int, std::string> httpResponses;
         std::map<std::string, std::string> _mimeTypes;
         std::map<std::string, std::string> _headers;
+        std::string _target;
     
         response_t handle_location(Server &server, std::vector<Location> &locations);
         response_t handle_method(Server &server, Location &locations);

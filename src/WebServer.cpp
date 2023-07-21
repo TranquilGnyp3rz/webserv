@@ -20,7 +20,28 @@ int find_sockets(std::vector<SocketServer> sockets, int sock) {
     }
     return 1;
 }
+void printResponseSet(fd_set response_set, int max_fd) {
+    printf("Content of response_set:\n");
 
+    for (int i = 0; i <= max_fd; i++) {
+        if (FD_ISSET(i, &response_set)) {
+            printf("File descriptor %d is set.\n", i);
+        } else {
+            printf("File descriptor %d is not set.\n", i);
+        }
+    }
+}
+void printWorkingSet(fd_set working_set, int max_fd) {
+    printf("Content of working_set:\n");
+
+    for (int i = 0; i <= max_fd; i++) {
+        if (FD_ISSET(i, &working_set)) {
+            printf("File descriptor %d is set.\n", i);
+        } else {
+            printf("File descriptor %d is not set.\n", i);
+        }
+    }
+}
 void WebServer::run() {
     fd_set master_set;
     int max_sd, i;
@@ -71,6 +92,8 @@ void WebServer::accepter(std::vector<SocketServer> &sockets, fd_set *master_set,
             }
             if (FD_ISSET(i , &response_set))
             {
+                
+
                 std::cout << "Discriptor " << i << "is writeable" << std::endl;
                 if (_clients.find(i)->second.response()) {
                     remove(_clients.find(i)->second.get_request().body_file.c_str());

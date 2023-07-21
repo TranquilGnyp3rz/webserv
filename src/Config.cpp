@@ -53,8 +53,8 @@ void Config::Check_complete_config_object()
             print_error_exit("Unvalid value for server_name (don't use space)");
         if (!is_valid_index(it->get_index()) && it->get_index() != "")
             print_error_exit("Unvalid value for index");
-        if (it->get_error_pages().size() == 0)
-            print_error_exit("Error_page is missing");
+        // if (it->get_error_pages().size() == 0)
+        //     print_error_exit("Error_page is missing");
         if (it->get_clientMaxBodySize() != "")
             if (!is_number(it->get_clientMaxBodySize()) || atoi(it->get_clientMaxBodySize().c_str()) == 0)
                 print_error_exit("Unvalid value for client_max_body_size");
@@ -73,13 +73,19 @@ void Config::Check_complete_config_object()
         //-------------------------location---------------------------------
         if (it->get_locations().size() == 0)
             print_error_exit("Location block is missing");
+        it->sort_locations();
+        int default_location = 0;
         for (std::vector<Location>::iterator it2 = it->get_locations().begin(); it2 != it->get_locations().end(); it2++)
         {
-            if (it2->get_locationName() == "")
-                it2->set_locationName("/");
+            // if (it2->get_locationName() == "")
+            //     it2->set_locationName("/");
+            if (!it2->is_valid_location())
+                print_error_exit("Unvalid name for location");
+            if (it2->get_locationName() == "/")
+                default_location = 1;
             if (it2->get_root() == "")
                 print_error_exit("Need to specify a root for location block");
-            if (it2->get_root().find(" ") != std::string::npos)
+            if (it2->get_root().find(" ") != std::string::npos || it2->get_root().back() == '/')
                 print_error_exit("Unvalid value for root");
             if (it2->get_index() == "")
                 it2->set_index(it->get_index());
@@ -96,6 +102,8 @@ void Config::Check_complete_config_object()
             if (is_valid_methods(it2->get_allowedMethods()).size() != 0)
                 print_error_exit("Unvalid method for allowed_methods : " + is_valid_methods(it2->get_allowedMethods()));
         }
+        if (default_location == 0)
+            print_error_exit("Missing default location for server : ");
     }
 }
 

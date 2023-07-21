@@ -126,8 +126,14 @@ void Client::parse_request() {
             if (vectors.size() == 4 && vectors.at(3) == "")
                 vectors.pop_back();
             if (vectors.size() != 3 || check_path(_request.path) == false) {
-                std::cout << "bad request" << std::endl;
+                std::cout << "bad request"  << std::endl;
                 _bad_request = 400;
+                return ;
+            }
+            if (_request.method != "GET" && _request.method != "POST" && _request.method != "DELETE")
+            {
+                std::cout << "bad request" << std::endl;
+                _bad_request = 405;
                 return ;
             }
             if ( _request.http_version != "HTTP/1.1"){
@@ -176,6 +182,7 @@ void Client::save_body(std::string &buffer, int &close_conn) {
         }
         catch(...) {
             std::cout << "bad request" << std::endl;
+
             _bad_request = 400;
             return ;
         }
@@ -262,7 +269,6 @@ bool Client::response() {
     int status, wait_return, rc;
     char buffer[CHUNKED_SIZE] = {0};
     std::string str = "";
-
     if (_response.init == false) {
         _response = ResourceHandler(_config, *this).handle_request();
         _response.head_done = false;
@@ -303,7 +309,6 @@ bool Client::response() {
             return false;
         return true;
     }
-    
     if ((rc = read(_response.body_file, buffer, CHUNKED_SIZE)) < 0)
     {
         if (errno != EWOULDBLOCK)
