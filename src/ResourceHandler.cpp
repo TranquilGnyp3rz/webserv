@@ -106,12 +106,6 @@ ResourceHandler::ResourceHandler(Config &config, Client &client) : _client(clien
     this->_mimeTypes["3g2"] = "video/3gpp2";
     this->_mimeTypes["audio/3gpp2"] = "audio/3gpp2";
     this->_mimeTypes["7z"] = "application/x-7z-compressed";
-    
-
-    for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); it++)
-    {
-        it->sort_locations();
-    }
 
 }
 
@@ -119,17 +113,12 @@ response_t ResourceHandler::handle_request() {
 
     for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); it++)
     {
-        if (it->get_server_name() + ":" + it->get_listen() == _client.get_request().headers["Host"] && _client.get_port() == it->get_port())
-        {
-            // // std::cout << "location :" << it->get_locationName() << std::endl;
-        }
          if (it->get_server_name() + ":" + it->get_listen() == _client.get_request().headers["Host"] && _client.get_port() == it->get_port())
          {
              return handle_location(*it , it->get_locations());
          }
-         // std::cout << "server name :" << _client.get_request().headers["Host"] << std::endl;
     }
-    // std::cout << "no server found" << std::endl;
+    std::cout << "no server found" << std::endl;
     return dynamic_page(404, false, _servers[0]);
 }
 
@@ -138,20 +127,19 @@ response_t ResourceHandler::handle_location(Server &server, std::vector<Location
     {
         if (location_match(it->get_locationName(), _client.get_request().path))
         {
-             _target = it->get_root() + '/';
-             _target += _client.get_request().path.substr(it->get_locationName().length(), _client.get_request().path.length());
-             // std::cout << "Target : " << _target << std::endl;
+             _target = it->get_root() + '/' + _client.get_request().path.substr(it->get_locationName().length(), _client.get_request().path.length());
+             std::cout << "Target : " << _target << std::endl;
              return handle_method(server, *it);
         }
     }
-    // std::cout << "no location found" << std::endl;
+    std::cout << "no location found" << std::endl;
     return dynamic_page(404, true, server);
 }
 
 bool ResourceHandler::location_match(std::string location, std::string path) {
     std::string tmp = path.substr(0, location.length());
-    // std::cout << "location :" << location << std::endl;
-    // std::cout << "path :" << path << std::endl;
+    if (location == "/" && path[0] == '/')
+        return true;
     if (tmp == location && (path[location.length()] == '/' || path[location.length()] == '\0'))
             return true;
     return false;
@@ -196,9 +184,8 @@ response_t ResourceHandler::get_file(Server &server, Location &location) {
     if (stat(_target.c_str(),&s) != 0){
         return dynamic_page(404, true, server);
     }
-    // // std::cout << "target : " << _target << std::endl;
     if (s.st_mode & S_IFDIR) {
-        // // std::cout << "Is directory" << std::endl;
+
         std::string index = _target;
         if (location.get_index() != "")
         {
@@ -212,15 +199,12 @@ response_t ResourceHandler::get_file(Server &server, Location &location) {
             response.headers = generate_headers("200", _client.get_request().method, index, fd);
             return response;
         }
-       
         if (_target.back() != '/')
             index += "/";
         index += "index.html";
-        // // std::cout << std::endl;
-        // // std::cout << "index :" << index << std::endl;
-        // // std::cout << std::endl;
         if (access(index.c_str(), R_OK) != -1)
         {
+            std::cout << "is dir" << std::endl;
             int fd = open(index.c_str(), O_RDONLY);
             if (fd == -1)
                 return dynamic_page(500, true, server);
@@ -229,6 +213,7 @@ response_t ResourceHandler::get_file(Server &server, Location &location) {
             return response;
         }
         else if (location.get_autoIndex() == "on") {
+              
             return get_directory(server, location);
         }
         else {
@@ -238,7 +223,6 @@ response_t ResourceHandler::get_file(Server &server, Location &location) {
     if (access(_target.c_str(), R_OK) == -1)
         return dynamic_page(404, true, server);
 
-    // // std::cout << "target : ------------------- " << _target << std::endl;
     int fd = open(_target.c_str(), O_RDONLY);
     if (fd == -1)
         return dynamic_page(500, true, server);
@@ -261,7 +245,7 @@ response_t ResourceHandler::get_directory(Server  &server, Location  &location) 
     response.init = true;
     response.body = true;
     response.cgi_response = false;
-
+    std::cout << "get dir start -------------------------" << std::endl;
     DIR* dir;
     int fd;
     struct dirent* entry;
