@@ -122,11 +122,8 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response
     rc = recv(i, buffer, sizeof(buffer), 0);
     if (rc < 0)
     {
-        if (errno != EWOULDBLOCK)
-        {
-            perror("  recv() failed");
-            close_conn = true;
-        }
+        perror("  recv() failed");
+        close_conn = true;
     }
     if (rc == 0)
     {
@@ -199,11 +196,8 @@ int WebServer::accept_socket(fd_set *working_set, int i, int *max_sd, int *new_s
     *new_sd = accept(i, NULL, NULL);
     if (*new_sd < 0)
     {
-        if (errno != EWOULDBLOCK)
-        {
-            perror("  accept() failed");
-            *end_Webserver = true;
-        }
+        perror("  accept() failed");
+        *end_Webserver = true;
         return -1;
     }
     else

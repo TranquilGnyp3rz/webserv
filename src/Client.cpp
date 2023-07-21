@@ -309,11 +309,8 @@ bool Client::response() {
     }
     if ((rc = read(_response.body_file, buffer, CHUNKED_SIZE)) < 0)
     {
-        if (errno != EWOULDBLOCK)
-        {
-            perror("read () failed");
-            return true;
-        }
+        perror("read () failed");
+        return true;
     }
     if (rc == 0)
     {

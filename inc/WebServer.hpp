@@ -14,7 +14,6 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "ResourceHandler.hpp"
