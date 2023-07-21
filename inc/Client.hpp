@@ -35,6 +35,10 @@ class Client {
         int get_sock();
         int get_port();
         request_t get_request();
+        void set_request(request_t request)
+        {
+            _request = request;
+        }
         std::string get_buffer();
         void  set_buffer(std::string buffer) {
             _buffer = buffer;

@@ -268,32 +268,32 @@ bool Client::response() {
         _response.head_done = false;
     }
 
-    if (_response.cgi_response == true)
-    {
-        std::cout << "CGI waitpid" << std::endl;
-        if ((wait_return = waitpid(_response.cgi_pid, &status, WNOHANG)) == -1)
-        {
-            perror("waitpid");
-            return true;
-        }
-        else if (wait_return == 0)
-            return false;
-        else
-        {
-            _response.cgi_response = false;
-            // _response.body_file = open(_response.cgi_response_file_name.c_str(), O_RDONLY);
-            std::cout << "Status code is : " << WEXITSTATUS(status) << std::endl;
-            std::cout << "CGI response's file is ready to be read from " << std::endl;
-            std::cout << "file name : " << _response.cgi_response_file_name << std::endl;
-            if (_response.body_file == -1)
-            {
-                perror("open");
-                return true;
-            }
-            exit(22);
-        }
-        return false;
-    }
+    // if (_response.cgi_response == true)
+    // {
+    //     std::cout << "CGI waitpid" << std::endl;
+    //     if ((wait_return = waitpid(_response.cgi_pid, &status, WNOHANG)) == -1)
+    //     {
+    //         perror("waitpid");
+    //         return true;
+    //     }
+    //     else if (wait_return == 0)
+    //         return false;
+    //     else
+    //     {
+    //         _response.cgi_response = false;
+    //         // _response.body_file = open(_response.cgi_response_file_name.c_str(), O_RDONLY);
+    //         std::cout << "Status code is : " << WEXITSTATUS(status) << std::endl;
+    //         std::cout << "CGI response's file is ready to be read from " << std::endl;
+    //         std::cout << "file name : " << _response.cgi_response_file_name << std::endl;
+    //         if (_response.body_file == -1)
+    //         {
+    //             perror("open");
+    //             return true;
+    //         }
+    //         exit(22);
+    //     }
+    //     return false;
+    // }
 
     if ( _response.head_done == false) {
         _response.head_done = true;

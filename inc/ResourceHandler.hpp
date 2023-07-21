@@ -52,6 +52,7 @@ class ResourceHandler {
         bool location_match(std::string location, std::string path);
         int get_file_size(int fd);
         std::string string_upper_copy(std::string str);
+        std::string get_filepath(Server &server, Location &location, std::string path);
     public:
         ResourceHandler(Config &config, Client &client);
         response_t handle_request();
