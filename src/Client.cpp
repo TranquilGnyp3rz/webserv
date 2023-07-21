@@ -317,17 +317,8 @@ bool Client::response() {
     }
     if ((rc = read(_response.body_file, buffer, CHUNKED_SIZE)) < 0)
     {
-        // check non blocking]
-        int errn = errno;
-        if (errn == EAGAIN || errn == EWOULDBLOCK)
-            return false;
         perror("this read () failed");
         return true;
-    }
-    if (rc < CHUNKED_SIZE)
-    {
-        close(_response.body_file);
-        close_con = true;
     }
     if (rc == 0)
     {
@@ -340,6 +331,11 @@ bool Client::response() {
     if (send(_sock, str.c_str(), str.length(), 0) < 0)
     {
         perror("send() failed");
+        return true;
+    }
+    if (rc < CHUNKED_SIZE)
+    {
+        close(_response.body_file);
         return true;
     }
     return false;
