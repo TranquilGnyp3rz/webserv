@@ -85,7 +85,7 @@ void Config::Check_complete_config_object()
                 default_location = 1;
             if (it2->get_root() == "")
                 print_error_exit("Need to specify a root for location block");
-            if (it2->get_root().find(" ") != std::string::npos || it2->get_root().back() == '/')
+            if (it2->get_root().find(" ") != std::string::npos || (it2->get_root().back() == '/' && it2->get_root().size() != 1))
                 print_error_exit("Unvalid value for root");
             if (it2->get_index() == "")
                 it2->set_index(it->get_index());
