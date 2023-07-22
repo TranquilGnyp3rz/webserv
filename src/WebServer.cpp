@@ -63,7 +63,8 @@ void WebServer::run() {
 }
 
 void WebServer::accepter(std::vector<SocketServer> &sockets, fd_set *master_set, int *max_sd) {
-    int new_sd, rc, i;
+    int new_sd, rc;
+    int i = 3;
     int desc_ready, end_Webserver = false;
     fd_set working_set, response_set, master_set_res;
 
@@ -72,15 +73,18 @@ void WebServer::accepter(std::vector<SocketServer> &sockets, fd_set *master_set,
     memcpy(&master_set_res, master_set, sizeof(response_set));
     while (true)
     {
+        i = 3;
         memset(&working_set, 0, sizeof(working_set));
         memset(&response_set, 0, sizeof(response_set));
         memcpy(&working_set, master_set, sizeof(*master_set));
         memcpy(&response_set, &master_set_res, sizeof(master_set_res));
-        // std::cout << "Waiting on select()..." << std::endl;
-        if (select_socket(&working_set, *max_sd, &rc, &response_set) == -1)
+        //print response set
+        // printResponseSet(response_set, *max_sd);
+        std::cout << "Waiting on select()..." << std::endl;
+        if (select_socket(&working_set, *max_sd + 1, &rc, &response_set) == -1)
             break;
         desc_ready = rc;
-        for (i = 3; i <= *max_sd && desc_ready > 0; i++)
+        while (i <= *max_sd)
         {
             if (FD_ISSET(i, &working_set))
             {
@@ -91,16 +95,18 @@ void WebServer::accepter(std::vector<SocketServer> &sockets, fd_set *master_set,
                         break;
                 }
                 else
+                {
+                    std::cout << "socket " << i << " is readable" << std::endl;
                     handler(i, master_set, max_sd, &master_set_res);
+                }
+                    
             }
             else if (FD_ISSET(i , &response_set))
             {
-                
-
-                // std::cout << "Discriptor " << i << "is writeable" << std::endl;
+                std::cout << "Discriptor " << i << "is writeable" << std::endl;
                 if (_clients.find(i)->second.response()) {
                     // remove(_clients.find(i)->second.get_request().body_file.c_str());
-                    // std::cout << "close socket " << i << std::endl;
+                    std::cout << "close socket " << i << std::endl;
                     if (*max_sd == i)
                         *max_sd -= 1;
                     FD_CLR(i, &master_set_res);
@@ -108,6 +114,7 @@ void WebServer::accepter(std::vector<SocketServer> &sockets, fd_set *master_set,
                     _clients.erase(i);
                 }
             }
+            i++;
         }
     }
 }
@@ -136,7 +143,7 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response
 
     std::string buf(buffer, rc);
     std::string::size_type pos;
-
+    // std::cout << "buf = " << std::endl << buf << std::endl;
     if (it->second.get_request().headerdone == false) {
         it->second.set_buffer(_clients.find(i)->second.get_buffer() + buf);
     }

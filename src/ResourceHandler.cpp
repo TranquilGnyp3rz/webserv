@@ -115,6 +115,7 @@ response_t ResourceHandler::handle_request() {
              return handle_location(*it , it->get_locations());
          }
     }
+    std::cout << _client.get_request().headers["Host"] << std::endl;
     std::cout << "no server found" << std::endl;
     return dynamic_page(404, false, _servers[0]);
 }
@@ -280,7 +281,7 @@ response_t ResourceHandler::get_directory(Server  &server, Location  &location) 
         if (location.get_locationName() == "/")
             html += "<li><a href=\"" +  _target.substr(location.get_root().length() + 1) + "/" + *it + "\">" +  *it + "</a></li>\n";
         else
-            html += "<li><a href=\"" + location.get_locationName() + _target.substr(location.get_root().length()) + "/" + *it + "\">" +  *it + "</a></li>\n";
+            html += "<li><a href=\""  +location.get_locationName() + _target.substr(location.get_root().length()) + "/" + *it + "\">" +  *it + "</a></li>\n";
     }
     html += "</ul>\n";
     html += "</body>\n";

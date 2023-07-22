@@ -73,11 +73,31 @@ Client::Client(Config &config, int port, int sock): _config(config){
     _request.body_lenght = 0;
     _request.body = "";
     _request.first_body = false;
+    _request.body_file = generate_filename() + std::to_string(_sock);
+    _request.headerdone = false;
+    _request.method = "";
+    _request.path = "";
+    _request.http_version = "";
+    // _request.headers = std::map<std::string, std::string>();
+
+
     _port = port;
     _sock = sock;
     _buffer = "";
     _bad_request = 0;
-    _request.body_file = generate_filename() + std::to_string(_sock);
+    _response.headers = "";
+    _response.body = false;
+    _response.body_file = 0;
+    _response.head_done = false;
+    _response.finish = false;
+    _response.init = false;
+    _response.read_bytes = 0;
+    _response.cgi = false;
+    _response.cgi_response = false;
+    _response.cgi_pid = -1;
+    _response.cgi_response_file_name = "";
+    
+    
 }
 
 request_t Client::get_request() {
@@ -264,7 +284,7 @@ bool Client::response() {
     bool close_con = false;
     char buffer[CHUNKED_SIZE] = {0};
     std::string str = "";
-
+    std::cout << "this socket  is " << _sock << std::endl;
     if (_response.init == false) {
         _response = ResourceHandler(_config, *this).handle_request();
         _response.head_done = false;
