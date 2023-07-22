@@ -102,11 +102,7 @@ static bool check_path(std::string path) {
     }
     return true;
 }
-//print asci
-// for (int i = 0; i < rc; i++)
-// {
-//     // // std::cout << (int)buffer[i] << " ";
-// }
+
 void Client::parse_request() {
     std::vector<std::string> vectors;
     std::istringstream iss(_buffer);
@@ -279,34 +275,38 @@ bool Client::response() {
         // std::cout << "this socket  is f " << _sock << std::endl;
         return true;
     }
-    // if (_response.cgi_response == true)
-    // {
-    //     // // std::cout << "CGI waitpid" << std::endl;
-    //     if ((wait_return = waitpid(_response.cgi_pid, &status, WNOHANG)) == -1)
-    //     {
-    //         perror("waitpid");
-    //         return true;
-    //     }
-    //     else if (wait_return == 0)
-    //         return false;
-    //     else
-    //     {
-    //         _response.cgi_response = false;
-    //         // _response.body_file = open(_response.cgi_response_file_name.c_str(), O_RDONLY);
-    //         // // std::cout << "Status code is : " << WEXITSTATUS(status) << std::endl;
-    //         // // std::cout << "CGI response's file is ready to be read from " << std::endl;
-    //         // // std::cout << "file name : " << _response.cgi_response_file_name << std::endl;
-    //         if (_response.body_file == -1)
-    //         {
-    //             perror("open");
-    //             return true;
-    //         }
-    //         exit(22);
-    //     }
-    //     return false;
-    // }
+    if (_response.cgi_response == true)
+    {
+        if ((wait_return = waitpid(_response.cgi_pid, &status, WNOHANG)) == -1)
+        {
+            perror("waitpid");
+            return true;
+        }
+        else if (wait_return == 0) {
+            return false;
+        }
+        else {
+            _response.cgi_response = false;
+            _response.body_file = open(_response.cgi_response_file_name.c_str(), O_RDONLY);
+            if (_response.body_file == -1)
+            {
+                perror("open");
+                return true;
+            }
 
-    if ( _response.head_done == false) {
+            _response.head_done = false;
+            _response.body = true;
+            _response.headers = get_header_cgi(_response.body_file);
+            std::cout << "header cgi " << _response.headers << std::endl;
+            std::cout << _response.headers << std::endl;
+            std::cout << "--------------------------------------" << std::endl;
+            _response.finish = false;
+            
+        }
+        return false;
+    }
+
+    if (_response.head_done == false) {
         _response.head_done = true;
         str = _response.headers;
         if (send( _sock, str.c_str(), str.length(), 0) < 0)
@@ -314,19 +314,18 @@ bool Client::response() {
             perror("send() failed header");
             return true;
         }
-        // send(_sock, str.c_str(), str.length(), 0);
-        // if 
-        // std::cout << str << _response.body << std::endl;
         if (_response.body)
             return false;
         _response.finish = true;
         return true;
     }
+
     if ((rc = read(_response.body_file, buffer, CHUNKED_SIZE)) < 0)
     {
         perror("this read () failed");
         return true;
     }
+    
     if (rc == 0)
     {
          _response.finish = true;
@@ -335,10 +334,9 @@ bool Client::response() {
     }
 
     str = std::string(buffer, rc);
-    // std::cout << str << std::endl;
+
     if (send(_sock, str.c_str(), str.length(), 0) < 0)
     {
-        // perror("send() failed");
         return true;
     }
     if (rc < CHUNKED_SIZE)
@@ -350,16 +348,26 @@ bool Client::response() {
     return false;
 }
 
-std::string Client::to_hex(int nm) {
-    std::string hex = "0123456789abcdef";
-    std::string result;
 
-    if (nm == 0)
-        return "0";
-    while (nm > 0)
+std::string Client::get_header_cgi( int fd) {
+    std::string header;
+    char buffer[60000] = {0};
+    int size;
+    int i = 0;
+
+    while (read(fd, &buffer[i], 1) > 0 && i < 60000)
     {
-        result = hex[nm % 16] + result;
-        nm /= 16;
+        if (buffer[i] == '\n' && buffer[i - 1] == '\r' && buffer[i - 2] == '\n' && buffer[i - 3] == '\r')
+            break;
+        i++;
     }
-    return result;
+
+    struct stat stat_buf;
+    fstat(fd, &stat_buf);
+    size = stat_buf.st_size - i;
+    header += "HTTP/1.1 200 OK\r\n";
+    header += "Server: webserv\r\n";
+    header += "Content-Length: " + std::to_string(size) + "\r\n";
+    header += std::string (buffer, i + 1);
+    return header;
 }

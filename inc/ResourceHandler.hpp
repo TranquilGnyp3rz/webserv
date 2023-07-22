@@ -38,13 +38,13 @@ class ResourceHandler {
         response_t delete_file(Server  &server, Location  &location);
         response_t handler_cgi(Server  &server, Location  &location, std::string script_path);
         char       **set_cgi_envv(Server  &server, Location  &location, std::string script_path);
-        bool        to_cgi(std::string filepath);
+        bool        to_cgi(std::string path);
         char        *get_cgi_bin(Server &server, Location &location, std::string script_path);
         std::string get_mime_type(std::string path);
         std::string get_last_modified(std::string path);
         std::string get_date();
         std::string get_headers(std::map<std::string, std::string> &headers);
-        char        **convert_map_to_cgi_envv(std::map<std::string, std::string> &headers);
+        char        **convert_map_to_cgi_envv(std::map<std::string, std::string> &headers, std::map<std::string, std::string> &headers2);
         response_t dynamic_page(int status, bool config, Server &server);
         std::string generate_page(const std::string& status);
         std::string generate_headers(std::string status, std::string method, std::string request_target, int fd);
@@ -53,7 +53,6 @@ class ResourceHandler {
         bool location_match(std::string location, std::string path);
         int get_file_size(int fd);
         std::string string_upper_copy(std::string str);
-        std::string get_filepath(Server &server, Location &location, std::string path);
     public:
         ResourceHandler(Config &config, Client &client);
         response_t handle_request();
