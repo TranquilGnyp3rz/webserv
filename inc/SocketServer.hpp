@@ -1,6 +1,7 @@
 #ifndef SOCKETSERVER_HPP
 #define SOCKETSERVER_HPP
 
+ #include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -11,6 +12,16 @@
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
+#include <cstring>
+
+// Check if the system is MacOS
+#if defined(__APPLE__)
+    // Define the macro as SO_NOSIGPIPE for MacOS
+    #define NOSIG SO_NOSIGPIPE
+#else
+    // Define the macro as MSG_NOSIGNAL for other systems
+    #define NOSIG MSG_NOSIGNAL
+#endif
 
 class SocketServer {
     private:

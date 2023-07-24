@@ -1,5 +1,4 @@
 #include "ResourceHandler.hpp"
-#include <cstring>
 
 ResourceHandler::ResourceHandler(Config &config, Client &client) : _client(client), _servers(config.get_servers()) {
 
@@ -173,7 +172,7 @@ response_t ResourceHandler::handle_method(Server &server, Location &location) {
     }
     else if (_client.get_request().method == "POST") {
         if (to_cgi(_target))
-            return handler_cgi(server, location, _target);
+            return handler_cgi(server, location, _client.get_request().path);
         else
             return dynamic_page(405, true, server);
     }
@@ -278,10 +277,15 @@ response_t ResourceHandler::get_directory(Server  &server, Location  &location) 
     html += "<h1>Autoindex</h1>\n";
     html += "<ul>\n";
     for (std::vector<std::string>::iterator it = files.begin(); it != files.end(); it++) {
-        if (location.get_locationName() == "/")
-            html += "<li><a href=\"" +  _target.substr(location.get_root().length() + 1) + "/" + *it + "\">" +  *it + "</a></li>\n";
-        else
-            html += "<li><a href=\""  +location.get_locationName() + _target.substr(location.get_root().length()) + "/" + *it + "\">" +  *it + "</a></li>\n";
+        std::string a;
+        a += "<li><a href=\"";
+        a += location.get_locationName();
+        a += _target.substr(location.get_root().length(), std::string::npos);
+        if (a[a.length() - 1] != '/')
+            a += "/";
+        a += *it + "\">" +  *it + "</a></li>\n";
+        std::cout << "href: " << a << std::endl;
+        html += a;
     }
     html += "</ul>\n";
     html += "</body>\n";
@@ -317,7 +321,6 @@ response_t ResourceHandler::delete_file(Server  &server, Location  &location) {
         response.headers = "HTTP/1.1 204 OK\r\n\r\n";
     return response;
 }
-
 
 response_t ResourceHandler::dynamic_page(int status, bool config, Server &server) {
     response_t response;
@@ -365,7 +368,6 @@ std::string ResourceHandler::generate_page(const std::string& status) {
     std::string htmlPage = "<html><head><title>Error " + status + "</title><style>body{font-family:'Courier New',monospace;margin:0;padding:0;background-color:#000;}.container{width:60%;margin:100px auto;padding:20px;background-color:#001a00;border-radius:5px;box-shadow:0 0 10px rgba(0,255,0,0.3);animation:glitch 2s infinite;}@keyframes glitch{0%{transform:translate(0);}20%{transform:translate(-2px,-2px);}40%{transform:translate(2px,2px);}60%{transform:translate(-2px,-2px);}80%{transform:translate(2px,2px);}100%{transform:translate(0);}}h1{color:#00ff00;text-align:center;text-transform:uppercase;letter-spacing:2px;font-size:32px;text-shadow:0 0 10px #00ff00,0 0 20px #00ff00,0 0 30px #00ff00;animation:glitch-text 2s infinite;}@keyframes glitch-text{0%{transform:translate(0);}20%{transform:translate(-2px,-2px);}40%{transform:translate(2px,2px);}60%{transform:translate(-2px,-2px);}80%{transform:translate(2px,2px);}100%{transform:translate(0);}}</style></head><body><div class=\"container\"><h1>Error " + status + "</h1></div></body></html>";
     return htmlPage;
 }
-
 
 std::string ResourceHandler::random_string( size_t length) {
     srand((unsigned) time(NULL) * getpid());
@@ -440,7 +442,6 @@ std::string ResourceHandler::generate_headers(std::string status, std::string me
 response_t ResourceHandler::handler_cgi(Server  &server, Location  &location, std::string script_path)
 {
     response_t response;
-    std::string path = script_path;
 
     script_path = script_path.substr(0, script_path.find('?'));
     response.init = true;
@@ -451,25 +452,19 @@ response_t ResourceHandler::handler_cgi(Server  &server, Location  &location, st
     response.body_file = open(response.cgi_response_file_name.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0644);
     if (response.body_file == -1)
         return dynamic_page(500, true, server);
-    // std::cout << "bin: "<< std::endl;
     response.cgi_pid = fork();
-    // std::cout << response.cgi_pid << std::endl;
-    // std::cout << "---------------------" << std::endl;
     if (response.cgi_pid == -1)
         return dynamic_page(500, true, server);
     if (response.cgi_pid == 0)
     {
-        // fflush(stdout);
-        // std::cout << "bin: childd"<< std::endl;
         char **env = set_cgi_envv(server, location, script_path);
         char *bin = get_cgi_bin(server, location, script_path);
-        const char *argv[] = { bin , script_path.c_str(), NULL};
+        const char *argv[] = { bin , _target.c_str(), NULL};
         request_t request = _client.get_request();
         int input_fd;
     
         if (_client.get_request().method == "POST")
         {
-            std::cout << "bin: child " << bin << std::endl;
             input_fd = open(request.body_file.c_str(), O_RDONLY);
             if (input_fd == -1)
                 exit(1);
@@ -478,10 +473,7 @@ response_t ResourceHandler::handler_cgi(Server  &server, Location  &location, st
         }
         dup2(response.body_file, STDOUT_FILENO);
         close(response.body_file);
-        // std::cout << "bin: execve "  << std::endl;
         execve(bin, (char **)argv, (char **)env);
-        // perror("cgi error: ");
-        // std::cout << "bin: " << bin << std::endl;
         exit(1);
     }
     close(response.body_file);
@@ -491,7 +483,6 @@ response_t ResourceHandler::handler_cgi(Server  &server, Location  &location, st
 char       **ResourceHandler::set_cgi_envv(Server  &server, Location  &location, std::string script_path)
 {
     std::map<std::string, std::string> env_map = _client.get_request().headers;
-    
     std::map<std::string, std::string> env_map2;
 
     env_map2["SERVER_SOFTWARE"] = "webserv";
@@ -504,8 +495,7 @@ char       **ResourceHandler::set_cgi_envv(Server  &server, Location  &location,
     env_map2["PATH_TRANSLATED"] = script_path;
     env_map2["SCRIPT_NAME"] = script_path;
     env_map2["UPLOAD_DIR"] = server.get_uploadPath();
-    std::cout << "upload dir: " << server.get_uploadPath() << std::endl;
-    env_map2["SCRIPT_FILENAME"] = script_path;
+    env_map2["QUERY_STRING"] = _client.get_request().path.substr(_client.get_request().path.find('?') + 1, std::string::npos);
     env_map2["REDIRECT_STATUS"] = "200";
     
     return convert_map_to_cgi_envv(env_map, env_map2);
@@ -513,38 +503,8 @@ char       **ResourceHandler::set_cgi_envv(Server  &server, Location  &location,
 
 char        * ResourceHandler::get_cgi_bin(Server &server, Location &location, std::string script_path)
 {
-    // std::vector<std::string> &_cgipath = server.get_cgipath();
-    // std::vector<std::string> &_cgiext = server.get_cgiextension();
-    // std::string tmppy, tmpphp;
-    // size_t i = script_path.rfind('.');
-    // if (i == std::string::npos)
-    //     return nullptr;
-    // std::string ext = script_path.substr(i);
-    // if (std::find(_cgiext.begin(), _cgiext.end(), ext) == _cgiext.end())
-    //     return nullptr;
-    // for (int i = 0; i < _cgiext.size(); i++)
-    // {
-    //     if (_cgiext[i] == ".py")
-    //         tmppy = strdup(_cgipath[i].c_str());
-    //     else if (_cgiext[i] == ".php")
-    //         tmpphp =  strdup(_cgipath[i].c_str());
-    // }
-    // std::cout << "ext:" << ext << std::endl;
-    // std::cout << "tmppy:" << tmppy << std::endl;
-    // std::cout << "tmpphp:" << tmpphp << std::endl;
-    // if (ext == ".py")
-    // {
-    //    std::cout << " wa 3fatttttt" << std::endl;
-    //     return strdup(tmppy.c_str());
-    // }
-        
-    // else if (ext == ".php")
-    //     return strdup(tmpphp.c_str());
-    // return strdup(_cgipath[0].c_str());
-
     std::vector<std::string> &_cgipath = server.get_cgipath();
     std::vector<std::string> &_cgiext = server.get_cgiextension();
-
     std::string etc = script_path.substr(script_path.rfind('.'));
     int i = 0;
 
@@ -563,6 +523,7 @@ char        * ResourceHandler::get_cgi_bin(Server &server, Location &location, s
     }
     return nullptr;
 }
+
 std::string ResourceHandler::string_upper_copy(std::string str)
 {
     std::string tmp = str;
@@ -575,11 +536,8 @@ std::string ResourceHandler::string_upper_copy(std::string str)
     return tmp;
 }
 
-
-
 char        **ResourceHandler::convert_map_to_cgi_envv(std::map<std::string, std::string> &headers, std::map<std::string, std::string> &headers2)
-{
-    
+{    
     char **env = new char*[headers.size() + headers2.size() + 1];
     int i = 0;
 
@@ -602,7 +560,6 @@ char        **ResourceHandler::convert_map_to_cgi_envv(std::map<std::string, std
     env[i] = nullptr;
     return env;
 }
-
 
 bool    ResourceHandler::to_cgi(std::string path)
 {

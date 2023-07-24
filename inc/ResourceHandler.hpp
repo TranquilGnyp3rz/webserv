@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <sys/wait.h>
 #include <algorithm>
+#include <cstring>
 #include "Config.hpp"
 #include "Server.hpp"
 #include "Location.hpp"

@@ -8,6 +8,8 @@
 #include <map>
 #include <vector>
 #include <utility>
+#include <stack>
+#include <cstdlib>
 #include "Server.hpp"
 
 class Config {

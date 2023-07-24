@@ -284,6 +284,7 @@ bool Client::response() {
     bool close_con = false;
     char buffer[CHUNKED_SIZE] = {0};
     std::string str = "";
+    
     std::cout << "this socket  is " << _sock << std::endl;
     if (_response.init == false) {
         _response = ResourceHandler(_config, *this).handle_request();
