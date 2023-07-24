@@ -279,8 +279,9 @@ response_t ResourceHandler::get_directory(Server  &server, Location  &location) 
     for (std::vector<std::string>::iterator it = files.begin(); it != files.end(); it++) {
         std::string a;
         a += "<li><a href=\"";
+        // if (location.get_locationName() != "/")
         a += location.get_locationName();
-        a += _target.substr(location.get_root().length(), std::string::npos);
+        a += _target.substr(location.get_root().length() + 1, std::string::npos);
         if (a[a.length() - 1] != '/')
             a += "/";
         a += *it + "\">" +  *it + "</a></li>\n";
