@@ -364,6 +364,33 @@ response_t ResourceHandler::handler_cgi(Server  &server, Location  &location, st
     {
         char **env = set_cgi_envv(server, location, script_path);
         char *bin = get_cgi_bin(server, location, script_path);
+        std::string option = "-d";
+        std::string option_value = "post_max_size=" + server.get_clientMaxBodySize();
+        
+        std::string cgi_extension = script_path.substr(script_path.rfind('.'));
+        if (cgi_extension == ".php")
+        {
+            const char *argv[] = { bin ,option.c_str(), option_value.c_str(), _target.c_str(), NULL};
+            request_t request = _client.get_request();
+            int input_fd;
+
+            if (_client.get_request().method == "POST")
+            {
+                input_fd = open(request.body_file.c_str(), O_RDONLY);
+                if (input_fd == -1)
+                    exit(1);
+
+                dup2(input_fd, STDIN_FILENO);
+                close(input_fd);
+            }
+
+            dup2(response.body_file, STDOUT_FILENO);
+            close(response.body_file);
+
+            execve(bin, (char **)argv, (char **)env);
+            exit(1);
+
+        }
         const char *argv[] = { bin , _target.c_str(), NULL};
         request_t request = _client.get_request();
         int input_fd;
