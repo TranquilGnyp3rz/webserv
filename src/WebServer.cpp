@@ -54,7 +54,7 @@ void WebServer::run() {
 
     for (i =0 ; i < (int)_ports.size(); i++)
     {
-        sockets.push_back(SocketServer(AF_INET, SOCK_STREAM, 0, _ports[i], INADDR_ANY));
+        sockets.push_back(SocketServer(AF_INET, SOCK_STREAM, 0, _ports[i], INADDR_ANY, _config.get_servers()[i].get_host()));
         max_sd = sockets[i].get_sock();
         FD_SET(sockets[i].get_sock(), &master_set);
     }

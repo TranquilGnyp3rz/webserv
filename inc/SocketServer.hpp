@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <cstring>
-
+#include "Config.hpp"
 class SocketServer {
     private:
         sockaddr_in _address;
@@ -23,8 +23,8 @@ class SocketServer {
         int _domain;
     public:
         SocketServer();
-        SocketServer(int domain, int service, int protocol, int port, u_long interface);
-        void connect_to_network(int &sock);
+        SocketServer(int domain, int service, int protocol, int port, u_long interface, std::string host);
+        void connect_to_network(int &sock, std::string host);
         void test_connection(int);
         struct sockaddr_in get_addr();
         int get_sock();
