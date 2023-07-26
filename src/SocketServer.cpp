@@ -5,7 +5,21 @@ SocketServer::SocketServer(int domain, int service, int protocol, int port, u_lo
     _port = port;
     _domain = domain;
 
+    (void)interface;
     _sock = socket(domain, service, protocol);
+    int on, rc = 1;
+    rc = setsockopt(_sock, SOL_SOCKET,  SO_REUSEADDR, (char *)&on, sizeof(on));
+    if (rc < 0) {
+        perror("setsockopt() failed");
+        close(_sock);
+        return ;
+    }
+    rc = setsockopt(_sock, SOL_SOCKET,  SO_NOSIGPIPE, (char *)&on, sizeof(on));
+    if (rc < 0) {
+        perror("setsockopt() failed");
+        close(_sock);
+        return ;
+    }
     test_connection(_sock);
     test_connection(set_non_blocking(_sock));
     connect_to_network(_sock);
@@ -31,20 +45,8 @@ struct sockaddr_in SocketServer::get_addr() {
     return _address;
 }
 
-int SocketServer::set_non_blocking(int sock) {
-        int on, rc = 1;
-        rc = setsockopt(sock, SOL_SOCKET,  SO_REUSEADDR, (char *)&on, sizeof(on));
-        if (rc < 0) {
-            perror("setsockopt() failed");
-            close(sock);
-            return -1;
-        }
-        rc = setsockopt(sock, SOL_SOCKET,  SO_NOSIGPIPE, (char *)&on, sizeof(on));
-        if (rc < 0) {
-            perror("setsockopt() failed");
-            close(sock);
-            return -1;
-        }
+int SocketServer::set_non_blocking(int &sock) {
+     int rc;
         rc = fcntl(sock, F_SETFL, O_NONBLOCK);
         if (rc < 0) {
            perror("fcntl() failed");
@@ -54,11 +56,11 @@ int SocketServer::set_non_blocking(int sock) {
     return 0;
 }
 
-void SocketServer::connect_to_network(int sock) {
+void SocketServer::connect_to_network(int &sock) {
 
     struct sockaddr_in addr;
    //bind socket to port
-    int rc, on = 1;
+    int rc = 1;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family    = AF_INET;
     // memcpy(&addr.sin_addr, &inaddr_any, sizeof(inaddr_any));

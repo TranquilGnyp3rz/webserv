@@ -56,13 +56,13 @@ static std::vector<std::string>    split_words(const std::string &str, char c) {
     words.push_back(str.substr(pos + 1));
     return words;
 }
-static std::string find_key(std::map<std::string, std::string> map, std::string key) {
-    std::map<std::string, std::string>::iterator it;
-    it = map.find(key);
-    if (it != map.end())
-        return it->second;
-    return "";
-}
+// static std::string find_key(std::map<std::string, std::string> map, std::string key) {
+//     std::map<std::string, std::string>::iterator it;
+//     it = map.find(key);
+//     if (it != map.end())
+//         return it->second;
+//     return "";
+// }
 
 Client::Client(Config &config, int sock): _config(config) {
  
@@ -85,19 +85,7 @@ Client::Client(Config &config, int port, int sock): _config(config){
     _sock = sock;
     _buffer = "";
     _bad_request = 0;
-    _response.headers = "";
-    _response.body = false;
-    _response.body_file = 0;
-    _response.head_done = false;
-    _response.finish = false;
-    _response.init = false;
-    _response.read_bytes = 0;
-    _response.cgi = false;
-    _response.cgi_response = false;
-    _response.cgi_pid = -1;
-    _response.cgi_response_file_name = "";
-    
-    
+ 
 }
 
 request_t Client::get_request() {
@@ -281,22 +269,15 @@ void Client::save_body(std::string &buffer, int &close_conn) {
 
 bool Client::response() {
     int status, wait_return, rc = 0;
-    bool close_con = false;
     char buffer[CHUNKED_SIZE] = {0};
-    std::string str = "";
     
     std::cout << "this socket  is " << _sock << std::endl;
     if (_response.init == false) {
         _response = ResourceHandler(_config, *this).handle_request();
         _response.head_done = false;
-        _response.finish = false;
     }
-    if (_response.finish == true)
-    {
-        // std::cout << "this socket  is f " << _sock << std::endl;
-        return true;
-    }
-    if (_response.cgi_response == true)
+
+    if (_response.cgi == true)
     {
         if ((wait_return = waitpid(_response.cgi_pid, &status, WNOHANG)) == -1)
         {
@@ -307,7 +288,7 @@ bool Client::response() {
             return false;
         }
         else {
-            _response.cgi_response = false;
+            _response.cgi  = false;
             _response.body_file = open(_response.cgi_response_file_name.c_str(), O_RDONLY);
             if (_response.body_file == -1)
             {
@@ -321,52 +302,143 @@ bool Client::response() {
             std::cout << "header cgi " << _response.headers << std::endl;
             std::cout << _response.headers << std::endl;
             std::cout << "--------------------------------------" << std::endl;
-            _response.finish = false;
-            
         }
-        return false;
     }
 
     if (_response.head_done == false) {
         _response.head_done = true;
-        str = _response.headers;
-        if (send( _sock, str.c_str(), str.length(), 0) < 0)
+        _response.str = _response.headers;
+        if (send( _sock, _response.str.c_str(), _response.str.length(), 0) < 0)
         {
             perror("send() failed header");
             return true;
         }
+        _response.str = "";
         if (_response.body)
             return false;
-        _response.finish = true;
         return true;
+    }
+    if (_response.str != "")
+    {
+        size_t send_bytes = send(_sock, _response.str.c_str(), _response.str.length(), 0);
+        if ( send_bytes < 0)
+        {
+            perror("Send ");
+             close(_response.body_file);
+            return true;
+        }
+        
+        if (send_bytes < _response.str.length())
+            _response.str = _response.str.substr(send_bytes, _response.str.length());
+        else
+            _response.str = "";
+        return false;
     }
 
     if ((rc = read(_response.body_file, buffer, CHUNKED_SIZE)) < 0)
     {
         perror("this read () failed");
+         close(_response.body_file);
         return true;
     }
     
     if (rc == 0)
     {
-         _response.finish = true;
         close(_response.body_file);
         return true;
     }
 
-    str = std::string(buffer, rc);
 
-    if (send(_sock, str.c_str(), str.length(), 0) < 0)
+    _response.str = std::string(buffer, rc);
+    size_t send_bytes = send(_sock, _response.str.c_str(), _response.str.length(), 0);
+    if ( send_bytes < 0)
     {
+        perror("Send ");
         return true;
     }
-    if (rc < CHUNKED_SIZE)
-    {
-         _response.finish = true;
-        close(_response.body_file);
-        return true;
-    }
+    
+    if (send_bytes < _response.str.length())
+        _response.str = _response.str.substr(send_bytes, _response.str.length());
+    else
+        _response.str = "";
+
+    // if (rc < CHUNKED_SIZE)
+    // {
+    //     close(_response.body_file);
+    //     return true;
+    // }
     return false;
+
+    // int wait, send_bytes, read_bytes;
+
+
+    // /* init response */
+    // std::cout << "this socket  is " << _sock << std::endl;
+    // if (_response.init == false) {
+    //     _response = ResourceHandler(_config, *this).handle_request();
+    // }
+
+    // if (_response.cgi) {
+    //     if ((wait = waitpid(_response.cgi_pid, nullptr, WNOHANG)) == -1)
+    //     {
+    //         perror("waitpid");
+    //         return true;
+    //     }
+    //     else if (wait == 0) {
+    //         return false;
+    //     }
+    //     else {
+    //         _response.cgi  = false;
+    //         _response.body_file = open(_response.cgi_response_file_name.c_str(), O_RDONLY);
+    //         if (_response.body_file == -1)
+    //         {
+    //             perror("open");
+    //             return true;
+    //         }
+
+    //         _response.head_done = false;
+    //         _response.body = true;
+    //         _response.headers = get_header_cgi(_response.body_file);
+
+    //         /* To be removed */
+    //         std::cout << "header cgi " << _response.headers << std::endl;
+    //         std::cout << _response.headers << std::endl;
+    //         std::cout << "--------------------------------------" << std::endl;
+    //     }
+    // }
+    
+    // if (_response.head_done == false) {
+    //     _response.head_done = true;
+    //     send_bytes = send(_sock, _response.headers.c_str(), _response.headers.length(), 0);
+    //     if (send_bytes < 0)
+    //     {
+    //         if (_response.body)
+    //             close(_response.body_file);
+    //         return true;
+    //     }
+    //     return false;
+    // }
+
+    // read_bytes = read(_response.body_file, _response.buffer, CHUNKED_SIZE - 1);
+    // if (read_bytes < 0)
+    // {
+    //     perror("read :");
+    //     close(_response.body_file);
+    //     return true;
+    // }
+    // if (read_bytes == 0)
+    // {
+    //     close(_response.body_file);
+    //     return true;
+    // }
+    // send_bytes = send(_sock, _response.buffer, read_bytes, 0);
+    // if (send_bytes < 0) {
+    //     perror("send :");
+    //     close(_response.body_file);
+    //     return true;
+    // }
+    // bzero(_response.buffer, CHUNKED_SIZE);
+    // return false;
 }
 
 

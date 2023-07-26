@@ -2,9 +2,10 @@
 
 WebServer::WebServer(std::string config_file) : _config(){
     _config.Handle_configFile(config_file);
-    for (int i = 0; i < _config.get_servers().size(); i++)
+    for (int i = 0; i < (int)_config.get_servers().size(); i++)
     {
         std::cout << "server " << i << " listen on port " << _config.get_servers()[i].get_listen() << std::endl;
+        std::cout << "server name : " << _config.get_servers()[i].get_server_name() << std::endl;
         if (std::find(_ports.begin(), _ports.end(), std::atoi(_config.get_servers()[i].get_listen().c_str())) == _ports.end())
              _ports.push_back(std::atoi(_config.get_servers()[i].get_listen().c_str()));
     }
@@ -20,35 +21,38 @@ int find_sockets(std::vector<SocketServer> sockets, int sock) {
     }
     return 1;
 }
-void printResponseSet(fd_set response_set, int max_fd) {
-    printf("Content of response_set:\n");
 
-    for (int i = 0; i <= max_fd; i++) {
-        if (FD_ISSET(i, &response_set)) {
-            printf("File descriptor %d is set.\n", i);
-        } else {
-            printf("File descriptor %d is not set.\n", i);
-        }
-    }
-}
-void printWorkingSet(fd_set working_set, int max_fd) {
-    printf("Content of working_set:\n");
+// void printResponseSet(fd_set response_set, int max_fd) {
+//     printf("Content of response_set:\n");
 
-    for (int i = 0; i <= max_fd; i++) {
-        if (FD_ISSET(i, &working_set)) {
-            printf("File descriptor %d is set.\n", i);
-        } else {
-            printf("File descriptor %d is not set.\n", i);
-        }
-    }
-}
+//     for (int i = 0; i <= max_fd; i++) {
+//         if (FD_ISSET(i, &response_set)) {
+//             printf("File descriptor %d is set.\n", i);
+//         } else {
+//             printf("File descriptor %d is not set.\n", i);
+//         }
+//     }
+// }
+
+// void printWorkingSet(fd_set working_set, int max_fd) {
+//     printf("Content of working_set:\n");
+
+//     for (int i = 0; i <= max_fd; i++) {
+//         if (FD_ISSET(i, &working_set)) {
+//             printf("File descriptor %d is set.\n", i);
+//         } else {
+//             printf("File descriptor %d is not set.\n", i);
+//         }
+//     }
+// }
+
 void WebServer::run() {
     fd_set master_set;
     int max_sd, i;
     std::vector<SocketServer> sockets;
     FD_ZERO(&master_set);
 
-    for (i =0 ; i < _ports.size(); i++)
+    for (i =0 ; i < (int)_ports.size(); i++)
     {
         sockets.push_back(SocketServer(AF_INET, SOCK_STREAM, 0, _ports[i], INADDR_ANY));
         max_sd = sockets[i].get_sock();
@@ -123,7 +127,9 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response
     std::map<int, Client>::iterator it = _clients.find(i);
     int close_conn = false;
     int rc;
-    char buffer[65536];
+    char buffer[CHUNKED_SIZE];
+
+    (void)max_sd;
     rc = recv(i, buffer, sizeof(buffer), 0);
     if (rc < 0)
     {
@@ -198,6 +204,8 @@ int WebServer::select_socket(fd_set *working_set, int max_sd, int *rc, fd_set *r
 
 int WebServer::accept_socket(fd_set *working_set, int i, int *max_sd, int *new_sd, int *end_Webserver, fd_set *master_set, std::map<int, Client> &clients, int ports) {
     // std::cout << " Listening socket is readable" << std::endl;
+
+    (void)working_set;
     struct sockaddr_in add;
     socklen_t addr_len = sizeof(struct sockaddr_in);
     *new_sd = accept(i, (struct sockaddr *) &add, &addr_len);
@@ -235,7 +243,7 @@ int WebServer::find_socket(std::vector<SocketServer> sockets, int sock) {
 
 int WebServer::find_client(std::vector<Client> _clients, int sock) {
 
-    for (int i = 0; i < _clients.size(); i++)
+    for (int i = 0; i < (int)_clients.size(); i++)
     {
         if (_clients[i].get_sock() == sock)
             return i;

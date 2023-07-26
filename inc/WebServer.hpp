@@ -20,7 +20,7 @@
 #include "SocketServer.hpp"
 #include "Client.hpp"
 #include "Config.hpp"
-
+#define CHUNKED_SIZE 60000
 
 class WebServer {
     private:

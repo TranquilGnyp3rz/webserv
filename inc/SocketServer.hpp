@@ -1,7 +1,7 @@
 #ifndef SOCKETSERVER_HPP
 #define SOCKETSERVER_HPP
 
- #include <sys/socket.h>
+#include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -24,13 +24,13 @@ class SocketServer {
     public:
         SocketServer();
         SocketServer(int domain, int service, int protocol, int port, u_long interface);
-        void connect_to_network(int sock);
+        void connect_to_network(int &sock);
         void test_connection(int);
         struct sockaddr_in get_addr();
         int get_sock();
         int get_port();
         int get_connection();
-        int set_non_blocking(int sock);
+        int set_non_blocking(int &sock);
         //copy constructor
         SocketServer(const SocketServer &other);
         //copy assignment operator

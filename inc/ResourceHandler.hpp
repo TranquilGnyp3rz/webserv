@@ -34,12 +34,16 @@ class ResourceHandler {
     
         response_t handle_location(Server &server, std::vector<Location> &locations);
         response_t handle_method(Server &server, Location &locations);
-        response_t get_file(Server  &server, Location  &location);
+  
+        response_t GET(Server  &server, Location  &location);
+        response_t DELETE(Server  &server, Location  &location);
+        response_t POST(Server  &server, Location  &location);
+
+        response_t get_index(Server  &server, Location  &location);
         response_t get_directory(Server  &server, Location  &location);
-        response_t delete_file(Server  &server, Location  &location);
         response_t handler_cgi(Server  &server, Location  &location, std::string script_path);
         char       **set_cgi_envv(Server  &server, Location  &location, std::string script_path);
-        bool        to_cgi(std::string path);
+        bool        to_cgi(Server &server, std::string path);
         char        *get_cgi_bin(Server &server, Location &location, std::string script_path);
         std::string get_mime_type(std::string path);
         std::string get_last_modified(std::string path);
