@@ -1,13 +1,15 @@
 #include "SocketServer.hpp"
 
 #include <arpa/inet.h>
-SocketServer::SocketServer(int domain, int service, int protocol, int port, u_long interface) {
+SocketServer::SocketServer(int domain, int service, int protocol, int port, u_long interface, std::string host)  {
     _port = port;
     _domain = domain;
 
     (void)interface;
     _sock = socket(domain, service, protocol);
-    int on, rc = 1;
+    test_connection(_sock);
+    int on = 1;
+    int rc = 1;
     rc = setsockopt(_sock, SOL_SOCKET,  SO_REUSEADDR, (char *)&on, sizeof(on));
     if (rc < 0) {
         perror("setsockopt() failed");
@@ -17,12 +19,12 @@ SocketServer::SocketServer(int domain, int service, int protocol, int port, u_lo
     rc = setsockopt(_sock, SOL_SOCKET,  SO_NOSIGPIPE, (char *)&on, sizeof(on));
     if (rc < 0) {
         perror("setsockopt() failed");
-        close(_sock);
+        close(_sock) ;
         return ;
     }
-    test_connection(_sock);
+    
     test_connection(set_non_blocking(_sock));
-    connect_to_network(_sock);
+    connect_to_network(_sock, host);
     // test_connection(_connection);
 }
 
@@ -47,16 +49,15 @@ struct sockaddr_in SocketServer::get_addr() {
 
 int SocketServer::set_non_blocking(int &sock) {
      int rc;
-        rc = fcntl(sock, F_SETFL, O_NONBLOCK);
-        if (rc < 0) {
-           perror("fcntl() failed");
-           close(sock);
-           return -1;
-        }
+    rc = fcntl(sock, F_SETFL, O_NONBLOCK);
+    if (rc < 0) {
+       close(sock);
+       return -1;
+    }
     return 0;
 }
 
-void SocketServer::connect_to_network(int &sock) {
+void SocketServer::connect_to_network(int &sock, std::string host) {
 
     struct sockaddr_in addr;
    //bind socket to port
@@ -64,14 +65,15 @@ void SocketServer::connect_to_network(int &sock) {
     memset(&addr, 0, sizeof(addr));
     addr.sin_family    = AF_INET;
     // memcpy(&addr.sin_addr, &inaddr_any, sizeof(inaddr_any));
-    addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    // std::cout << "host: " << host << std::endl;
+    addr.sin_addr.s_addr = inet_addr(host.c_str());
     // inet_aton("127.0.0.1", &addr.sin_addr.s_addr);
     addr.sin_port  = htons(_port);
     rc = bind(sock, (struct sockaddr *)&addr, sizeof(addr));
 
 
     if (rc < 0) {
-        std::cerr << "bind() failed" << rc << std::endl;
+       perror("bind() failed");
         exit(-1);
     }
     //listen to socket
