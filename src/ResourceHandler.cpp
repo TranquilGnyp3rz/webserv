@@ -133,11 +133,9 @@ response_t ResourceHandler::handle_location(Server &server, std::vector<Location
              size_t pos = _target.find('?');
              if (pos != std::string::npos)
                 _target = _target.substr(0, pos);
-             std::cout << "Requested file or directory : " << _target << std::endl;
              return handle_method(server, *it);
         }
     }
-    std::cout << "no location found" << std::endl;
     return dynamic_page(404, true, server);
 }
 

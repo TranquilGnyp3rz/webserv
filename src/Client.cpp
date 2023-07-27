@@ -271,7 +271,7 @@ bool Client::response() {
     int status, wait_return, rc = 0;
     char buffer[CHUNKED_SIZE] = {0};
     
-    std::cout << "this socket  is " << _sock << std::endl;
+
     if (_response.init == false) {
         _response = ResourceHandler(_config, *this).handle_request();
         _response.head_done = false;
@@ -292,7 +292,6 @@ bool Client::response() {
             _response.body_file = open(_response.cgi_response_file_name.c_str(), O_RDONLY);
             if (_response.body_file == -1)
             {
-                perror("open");
                 return true;
             }
 
@@ -300,9 +299,6 @@ bool Client::response() {
             _response.body = true;
             std::string etx = _request.path.substr(_request.path.find_last_of('.'));
             _response.headers = get_header_cgi(_response.body_file, etx);
-            std::cout << "header cgi " << _response.headers << std::endl;
-            std::cout << _response.headers << std::endl;
-            std::cout << "--------------------------------------" << std::endl;
         }
     }
 

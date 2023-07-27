@@ -80,7 +80,6 @@ void WebServer::accepter(std::vector<SocketServer> &sockets, fd_set *master_set,
         memset(&response_set, 0, sizeof(response_set));
         memcpy(&working_set, master_set, sizeof(*master_set));
         memcpy(&response_set, &master_set_res, sizeof(master_set_res));
-        std::cout << "Waiting on select()..." << std::endl;
         if (select_socket(&working_set, *max_sd + 1, &rc, &response_set) == -1)
             break;
         desc_ready = rc;
@@ -206,6 +205,7 @@ int WebServer::accept_socket(fd_set *working_set, int i, int *max_sd, int *new_s
     // std::cout << " Listening socket is readable" << std::endl;
 
     (void)working_set;
+    (void)end_Webserver;
     struct sockaddr_in add;
     socklen_t addr_len = sizeof(struct sockaddr_in);
     *new_sd = accept(i, (struct sockaddr *) &add, &addr_len);
@@ -224,8 +224,6 @@ int WebServer::accept_socket(fd_set *working_set, int i, int *max_sd, int *new_s
             close(*new_sd);
             return -1;
         }
-        // std::cout << "  New incoming connection - " << *new_sd << std::endl;
-        // ResourceHandler resource_handler(this->_config, );
         clients.insert(std::make_pair(*new_sd, Client(this->_config, ports, *new_sd)));
         FD_SET(*new_sd, master_set);
         if (*new_sd > *max_sd)

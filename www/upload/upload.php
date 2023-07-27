@@ -1,44 +1,60 @@
-<?php
-	if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
-		$file = $_FILES['file'];
-	
-		// File information
-		$fileName = $file['name'];
-		$fileSize = $file['size'];
-		$fileTmpPath = $file['tmp_name'];
-		$fileError = $file['error'];
-	
-		// Check for errors
-		if ($fileError === UPLOAD_ERR_OK) {
-			// Specify the destination directory to save the uploaded file
-			$uploadDir = $_SERVER["UPLOAD_TMP_DIR"] . "/";
-	
-			// Generate a unique file name to avoid collisions
-			$uniqueFileName = uniqid() . '_' . $fileName;
-	
-			// Move the uploaded file to the destination directory
-			$destination = $uploadDir . $uniqueFileName;
-			if (move_uploaded_file($fileTmpPath, $destination)) {
-				echo "File uploaded successfully.";
-			} else {
-				echo "Error moving uploaded file.";
-			}
-		} else {
-			echo "Error uploading file. Error code: " . $fileError;
-		}
-	}
-	?>
-	
-	<!DOCTYPE html>
-	<html>
-	<head>
-		<title>File Upload</title>
-	</head>
-	<body>
-		<h2>Upload a File</h2>
-		<form method="POST" enctype="multipart/form-data">
-			<input type="file" name="file" required>
-			<button type="submit">Upload</button>
-		</form>
-	</body>
-	</html>
+<html lang="en">
+<head>
+   
+</head>
+<body style="background-color: lightgrey; color: red;">
+
+<h1>Uploading images using PHP-CGI</h1>
+
+
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+
+   <form action="upload.php" method="POST" enctype="multipart/form-data">
+         <input type="file" name="image" />
+         <input type="submit"/>
+      </form>
+
+
+   <?php
+   if(isset($_FILES['image']))
+   {
+      $errors= array();
+      $file_name = $_FILES['image']['name'];
+      $file_size =$_FILES['image']['size'];
+      $file_tmp = $_FILES['image']['tmp_name'];
+      $file_type= $_FILES['image']['type'];
+      $tmp = $_FILES['image']['name'];
+      $tmp = explode('.',$tmp);
+      $file_ext = strtolower(end($tmp));
+      
+      $extensions= array("jpeg","jpg","png");
+      
+      // if(in_array($file_ext,$extensions) === false)
+      // {
+      //    $errors[]="extension not allowed, please choose a JPEG or PNG file.";
+      // }
+      $path = "../uploads/".$file_name ;
+      move_uploaded_file($file_tmp,$path);
+      echo "Success <br/>";
+      
+
+      if(empty($errors)==true)
+      {
+         echo "<img src=".$path." width=50% />";
+      }
+      else
+      {
+         print_r($errors);
+      }
+   }
+   else
+   {
+      echo "No file has been uploaded";
+   }
+?>
+
+
+
+</div>
+</body>
+</html>
