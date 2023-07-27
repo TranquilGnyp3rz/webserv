@@ -96,17 +96,17 @@ void WebServer::accepter(std::vector<SocketServer> &sockets, fd_set *master_set,
                         break;
                 }
                 else{
-                    std::cout << "Discriptor " << i << "is readale" << std::endl;
+                    // std::cout << "Discriptor " << i << "is readale" << std::endl;
                     handler(i, master_set, max_sd, &master_set_res);
                 }
                     
             }
             else if (FD_ISSET(i , &response_set))
             {
-                std::cout << "Discriptor " << i << "is writeable" << std::endl;
+                // std::cout << "Discriptor " << i << "is writeable" << std::endl;
                 if (_clients.find(i)->second.response()) {
                     // remove(_clients.find(i)->second.get_request().body_file.c_str());
-                    std::cout << "close socket " << i << std::endl;
+                    // std::cout << "close socket " << i << std::endl;
                     if (*max_sd == i)
                         *max_sd -= 1;
                     FD_CLR(i, &master_set_res);
@@ -133,7 +133,7 @@ void WebServer::handler(int i, fd_set *master_set, int *max_sd, fd_set *response
     rc = recv(i, buffer, sizeof(buffer), 0);
     if (rc < 0)
     {
-        perror("  recv() failed");
+        // perror("  recv() failed");
         close_conn = true;
     }
     if (rc == 0)

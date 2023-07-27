@@ -108,6 +108,8 @@ ResourceHandler::ResourceHandler(Config &config, Client &client) : _client(clien
 }
 
 response_t ResourceHandler::handle_request() {
+    if (_client.get_bad_request() != 0)
+        return dynamic_page(_client.get_bad_request(), false, _servers[0]);
     for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); it++)
     {
         if (it->get_server_name() == _client.get_request().headers["Host"] && _client.get_port() == it->get_port())

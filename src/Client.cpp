@@ -311,7 +311,7 @@ bool Client::response() {
         _response.str = _response.headers;
         if (send( _sock, _response.str.c_str(), _response.str.length(), 0) < 0)
         {
-            perror("send() failed header");
+            // perror("send() failed header");
             return true;
         }
         _response.str = "";
@@ -324,7 +324,7 @@ bool Client::response() {
         size_t send_bytes = send(_sock, _response.str.c_str(), _response.str.length(), 0);
         if ( send_bytes < 0)
         {
-            perror("Send ");
+            // perror("Send ");
              close(_response.body_file);
             return true;
         }
@@ -338,7 +338,7 @@ bool Client::response() {
 
     if ((rc = read(_response.body_file, buffer, CHUNKED_SIZE)) < 0)
     {
-        perror("this read () failed");
+        // perror("this read () failed");
          close(_response.body_file);
         return true;
     }
@@ -354,7 +354,7 @@ bool Client::response() {
     size_t send_bytes = send(_sock, _response.str.c_str(), _response.str.length(), 0);
     if ( send_bytes < 0)
     {
-        perror("Send ");
+        // perror("Send ");
         return true;
     }
     
