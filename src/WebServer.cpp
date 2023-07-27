@@ -213,13 +213,17 @@ int WebServer::accept_socket(fd_set *working_set, int i, int *max_sd, int *new_s
     if (*new_sd < 0)
     {
         perror("  accept() failed");
-        *end_Webserver = true;
         return -1;
     }
     
     else
     {
-        fcntl(*new_sd, F_SETFL, O_NONBLOCK);
+        int c = fcntl(*new_sd, F_SETFL, O_NONBLOCK);
+        if (c < 0) {
+            perror("fcntl() failed");
+            close(*new_sd);
+            return -1;
+        }
         // std::cout << "  New incoming connection - " << *new_sd << std::endl;
         // ResourceHandler resource_handler(this->_config, );
         clients.insert(std::make_pair(*new_sd, Client(this->_config, ports, *new_sd)));
