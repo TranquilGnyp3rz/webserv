@@ -29,7 +29,7 @@ class Client {
         Client(Config &config, int port, int sock);
         void parse_request();
         void save_body(std::string &buffer, int &close_conn);
-        std::string get_header_cgi( int fd);
+        std::string get_header_cgi(int fd, std::string etx);
         /* Getters */
         int get_sock();
         int get_port();

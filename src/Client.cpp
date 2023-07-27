@@ -298,7 +298,8 @@ bool Client::response() {
 
             _response.head_done = false;
             _response.body = true;
-            _response.headers = get_header_cgi(_response.body_file);
+            std::string etx = _request.path.substr(_request.path.find_last_of('.'));
+            _response.headers = get_header_cgi(_response.body_file, etx);
             std::cout << "header cgi " << _response.headers << std::endl;
             std::cout << _response.headers << std::endl;
             std::cout << "--------------------------------------" << std::endl;
@@ -368,99 +369,34 @@ bool Client::response() {
     //     return true;
     // }
     return false;
-
-    // int wait, send_bytes, read_bytes;
-
-
-    // /* init response */
-    // std::cout << "this socket  is " << _sock << std::endl;
-    // if (_response.init == false) {
-    //     _response = ResourceHandler(_config, *this).handle_request();
-    // }
-
-    // if (_response.cgi) {
-    //     if ((wait = waitpid(_response.cgi_pid, nullptr, WNOHANG)) == -1)
-    //     {
-    //         perror("waitpid");
-    //         return true;
-    //     }
-    //     else if (wait == 0) {
-    //         return false;
-    //     }
-    //     else {
-    //         _response.cgi  = false;
-    //         _response.body_file = open(_response.cgi_response_file_name.c_str(), O_RDONLY);
-    //         if (_response.body_file == -1)
-    //         {
-    //             perror("open");
-    //             return true;
-    //         }
-
-    //         _response.head_done = false;
-    //         _response.body = true;
-    //         _response.headers = get_header_cgi(_response.body_file);
-
-    //         /* To be removed */
-    //         std::cout << "header cgi " << _response.headers << std::endl;
-    //         std::cout << _response.headers << std::endl;
-    //         std::cout << "--------------------------------------" << std::endl;
-    //     }
-    // }
-    
-    // if (_response.head_done == false) {
-    //     _response.head_done = true;
-    //     send_bytes = send(_sock, _response.headers.c_str(), _response.headers.length(), 0);
-    //     if (send_bytes < 0)
-    //     {
-    //         if (_response.body)
-    //             close(_response.body_file);
-    //         return true;
-    //     }
-    //     return false;
-    // }
-
-    // read_bytes = read(_response.body_file, _response.buffer, CHUNKED_SIZE - 1);
-    // if (read_bytes < 0)
-    // {
-    //     perror("read :");
-    //     close(_response.body_file);
-    //     return true;
-    // }
-    // if (read_bytes == 0)
-    // {
-    //     close(_response.body_file);
-    //     return true;
-    // }
-    // send_bytes = send(_sock, _response.buffer, read_bytes, 0);
-    // if (send_bytes < 0) {
-    //     perror("send :");
-    //     close(_response.body_file);
-    //     return true;
-    // }
-    // bzero(_response.buffer, CHUNKED_SIZE);
-    // return false;
 }
 
 
-std::string Client::get_header_cgi( int fd) {
+std::string Client::get_header_cgi( int fd, std::string etx) {
     std::string header;
     char buffer[60000] = {0};
     int size;
     int i = 0;
 
-    while (read(fd, &buffer[i], 1) > 0 && i < 60000)
+    if (etx == ".php")
     {
-        if (buffer[i] == '\n' && buffer[i - 1] == '\r' && buffer[i - 2] == '\n' && buffer[i - 3] == '\r')
-            break;
-        i++;
+        while (read(fd, &buffer[i], 1) > 0 && i < 60000)
+        {
+            if (buffer[i] == '\n' && buffer[i - 1] == '\r' && buffer[i - 2] == '\n' && buffer[i - 3] == '\r')
+                break;
+            i++;
+        }
     }
-
     struct stat stat_buf;
     fstat(fd, &stat_buf);
     size = stat_buf.st_size - i;
     header += "HTTP/1.1 200 OK\r\n";
     header += "Server: webserv\r\n";
     header += "Content-Length: " + std::to_string(size) + "\r\n";
-    header += std::string (buffer, i + 1);
+    if (etx == ".php")
+        header += std::string (buffer, i + 1);
+    else
+        header += "Content-Type: text/html\r\n";
+    header += "\r\n";
     return header;
 }

@@ -55,8 +55,10 @@ void Config::Check_complete_config_object()
             print_error_exit("Unvalid value for index");
         // if (it->get_error_pages().size() == 0)
         //     print_error_exit("Error_page is missing");
+        if (it->get_clientMaxBodySize() == "")
+            print_error_exit("Client_max_body_size is missing");
         if (it->get_clientMaxBodySize() != "")
-            if (!is_number(it->get_clientMaxBodySize()) || atoi(it->get_clientMaxBodySize().c_str()) == 0)
+            if (!is_number(it->get_clientMaxBodySize()) || atoi(it->get_clientMaxBodySize().c_str()) < 0)
                 print_error_exit("Unvalid value for client_max_body_size");
         if (it->get_uploadPath() == "")
             print_error_exit("Upload_path is missing");

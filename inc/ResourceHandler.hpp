@@ -15,6 +15,11 @@
 #include <sys/wait.h>
 #include <algorithm>
 #include <cstring>
+
+#include <sys/stat.h>
+#include <ftw.h>
+#include <unistd.h>
+
 #include "Config.hpp"
 #include "Server.hpp"
 #include "Location.hpp"
@@ -58,6 +63,7 @@ class ResourceHandler {
         bool location_match(std::string location, std::string path);
         int get_file_size(int fd);
         std::string string_upper_copy(std::string str);
+
     public:
         ResourceHandler(Config &config, Client &client);
         response_t handle_request();

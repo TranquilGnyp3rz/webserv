@@ -162,18 +162,6 @@ response_t ResourceHandler::handle_method(Server &server, Location &location) {
     if (_client.get_request().method == "GET") {
         return GET(server, location);   
     } else if (_client.get_request().method == "DELETE") {
-        struct stat s;
-        if (stat(_target.c_str(),&s) != 0) {
-            if (errno == ENOENT)
-                return dynamic_page(404, true, server);
-            else if (errno == EACCES)
-                return dynamic_page(403, true, server);
-            else
-                return dynamic_page(500, true, server);
-        }
-        if (s.st_mode & S_IFDIR)
-            return dynamic_page(405, true, server);
-        else
             return DELETE(server, location);
     } else if (_client.get_request().method == "POST") {
         return POST(server, location);
@@ -237,7 +225,6 @@ response_t ResourceHandler::POST(Server  &server, Location  &location)
     (void)server;
     (void)location;
 
-    /* check Max Body Size */
     if (_client.get_request().body_lenght > std::atoi(server.get_clientMaxBodySize().c_str()))
         return dynamic_page(413, true, server);
     if (to_cgi(server, _target))
@@ -328,6 +315,41 @@ response_t ResourceHandler::get_directory(Server  &server, Location  &location) 
     return response;
 }
 
+bool can_delete(const char* path)
+{
+    struct stat path_info;
+    if (stat(path, &path_info) != 0) 
+        return false;
+
+    if (S_ISDIR(path_info.st_mode))
+    {
+        if (access(path, R_OK | W_OK | X_OK) == 0)
+            return true;
+    }
+    else
+    {
+        if (access(path, R_OK | W_OK) == 0)
+            return true;
+    }
+    return false;
+}
+
+int delete_file(const char* path, const struct stat* sb, int typeflag, struct FTW* ftwbuf)
+{
+    (void) sb;
+    (void) typeflag;
+    (void) ftwbuf;
+    if (remove(path) == -1) 
+    {
+        std::cerr << "Error deleting file/directory: " << strerror(errno) << std::endl;
+
+    } else {
+        std::cout << "Deleted file/directory: " << path << std::endl;
+    }
+
+    return 0;
+}
+
 response_t ResourceHandler::DELETE(Server  &server, Location  &location) {
     response_t response;
 
@@ -335,11 +357,64 @@ response_t ResourceHandler::DELETE(Server  &server, Location  &location) {
     (void)location;
     response.init = true; 
     response.body = false;
+    std::string path = _target;
 
-    if (std::remove(_target.c_str()) != 0)
-        response.headers = "HTTP/1.1 404 OK\r\n\r\n";
+    if (access(path.c_str(), F_OK) == -1)
+    {
+        response.headers = "HTTP/1.1 404 Not Found\r\n\r\n";
+        return response;
+    }
+    struct stat path_info;
+    if (stat(path.c_str(), &path_info) != 0)
+    {
+        response.headers = "HTTP/1.1 404 Not Found\r\n\r\n";
+        return response;
+    }
     else
-        response.headers = "HTTP/1.1 204 OK\r\n\r\n";
+    {
+        if (S_ISDIR(path_info.st_mode))
+        {
+            if(path[path.size() - 1] != '/')
+            {
+                response.headers = "HTTP/1.1 409 Conflict\r\n\r\n";
+                return response;
+            }
+            if(can_delete(path.c_str()))
+            {
+                if (nftw(path.c_str(), delete_file, 64, FTW_DEPTH | FTW_PHYS) == -1)
+                {
+                    response.headers = "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+                    return response;
+                }
+                else
+                {
+                    response.headers = "HTTP/1.1 204 No Content\r\n\r\n";
+                    return response;
+                }
+            }
+            else
+            {
+                response.headers = "HTTP/1.1 403 Forbidden\r\n\r\n";
+                return response;
+            }
+        } 
+        else
+        {
+            if (can_delete(path.c_str()) == false)
+            {
+                response.headers = "HTTP/1.1 403 Forbidden\r\n\r\n";
+                return response;
+            }
+
+            if (remove(path.c_str()) != 0)
+            {
+                response.headers = "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+                return response;
+            }
+        }
+
+    }
+    response.headers = "HTTP/1.1 204 No Content\r\n\r\n";
     return response;
 }
 
@@ -364,33 +439,6 @@ response_t ResourceHandler::handler_cgi(Server  &server, Location  &location, st
     {
         char **env = set_cgi_envv(server, location, script_path);
         char *bin = get_cgi_bin(server, location, script_path);
-        std::string option = "-d";
-        std::string option_value = "post_max_size=" + server.get_clientMaxBodySize();
-        
-        std::string cgi_extension = script_path.substr(script_path.rfind('.'));
-        if (cgi_extension == ".php")
-        {
-            const char *argv[] = { bin ,option.c_str(), option_value.c_str(), _target.c_str(), NULL};
-            request_t request = _client.get_request();
-            int input_fd;
-
-            if (_client.get_request().method == "POST")
-            {
-                input_fd = open(request.body_file.c_str(), O_RDONLY);
-                if (input_fd == -1)
-                    exit(1);
-
-                dup2(input_fd, STDIN_FILENO);
-                close(input_fd);
-            }
-
-            dup2(response.body_file, STDOUT_FILENO);
-            close(response.body_file);
-
-            execve(bin, (char **)argv, (char **)env);
-            exit(1);
-
-        }
         const char *argv[] = { bin , _target.c_str(), NULL};
         request_t request = _client.get_request();
         int input_fd;
@@ -548,7 +596,9 @@ response_t ResourceHandler::dynamic_page(int status, bool config, Server &server
             strncpy(filename, it->second.c_str() , it->second.length());
             fd = open(filename, O_RDONLY);
             if (fd == -1)
-                return dynamic_page(500, false, server);
+            {
+                return dynamic_page(status, false, server);
+            }
             response.body_file = fd;
             response.headers = generate_headers(std::to_string(status), _client.get_request().method, filename, fd);
             return response;
